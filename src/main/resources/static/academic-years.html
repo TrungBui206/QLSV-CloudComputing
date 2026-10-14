@@ -1,0 +1,494 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý niên khóa</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            background: #e5e5e5;
+            font-family: system-ui, sans-serif;
+            color: #1f2937;
+        }
+
+        aside { width: 230px; background: #fff; padding: 16px; }
+        aside h1 { margin: 0; font-size: 15px; color: #14397d; }
+        aside small { color: #6b7280; }
+
+        aside nav a {
+            display: block;
+            margin-top: 6px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: #374151;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        aside nav a.active { background: #e8eefb; font-weight: 600; }
+
+        main { flex: 1; padding: 24px; }
+        .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        h2 { margin: 0; }
+        .card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .bar { display: flex; gap: 12px; }
+        .bar input { flex: 1; }
+
+        input, textarea {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #14397d;
+            background: #fff;
+            color: #14397d;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button.primary { background: #14397d; color: #fff; }
+        button.danger { border-color: #b91c1c; color: #b91c1c; }
+        button:disabled { opacity: .4; cursor: default; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 12px; background: #14397d; color: #fff; text-align: left; font-size: 14px; }
+        th.sortable { cursor: pointer; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+
+        .num { width: 60px; text-align: center; }
+        .year { text-align: center; }
+        .act { width: 150px; white-space: nowrap; }
+        .act button { padding: 6px 12px; margin-right: 6px; }
+
+        .foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pager { display: flex; gap: 6px; }
+        .pager button { padding: 6px 12px; }
+        .pager button.cur { background: #14397d; color: #fff; }
+        .msg { padding: 24px; text-align: center; color: #6b7280; }
+
+        dialog {
+            border: 0;
+            border-radius: 12px;
+            padding: 24px;
+            width: 440px;
+        }
+
+        dialog::backdrop { background: rgba(0, 0, 0, .4); }
+        dialog h3 { margin: 0 0 16px; }
+        dialog label { display: block; margin-bottom: 12px; font-size: 14px; }
+        dialog input, dialog textarea { display: block; width: 100%; margin-top: 4px; }
+
+        .row2 { display: flex; gap: 12px; }
+        .row2 label { flex: 1; }
+        .err { min-height: 20px; margin: 0 0 8px; color: #b91c1c; font-size: 14px; }
+        .actions { display: flex; justify-content: flex-end; gap: 8px; }
+    </style>
+</head>
+
+<body>
+
+<aside>
+    <h1>QUẢN LÝ MÔN HỌC</h1>
+    <small>HỆ THỐNG QUẢN TRỊ</small>
+    <nav id="nav"></nav>
+</aside>
+
+<main>
+    <div class="head">
+        <h2>Quản lý niên khóa</h2>
+        <button class="primary" id="addBtn">+ Thêm mới</button>
+    </div>
+
+    <div class="card bar">
+        <input id="keyword" placeholder="Tìm theo tên niên khóa, mã...">
+        <button id="searchBtn">Tìm kiếm</button>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th class="num">TT</th>
+                <th class="sortable" data-sort="code">Mã</th>
+                <th class="sortable" data-sort="name">Tên niên khóa</th>
+                <th>Mô tả</th>
+                <th class="sortable year" data-sort="startYear">Năm bắt đầu</th>
+                <th class="sortable year" data-sort="endYear">Năm kết thúc</th>
+                <th class="act">Hành động</th>
+            </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+        </table>
+
+        <div class="foot">
+            <span id="info"></span>
+            <div class="pager" id="pager"></div>
+        </div>
+    </div>
+</main>
+
+<dialog id="dlg">
+    <form id="frm">
+        <h3 id="dlgTitle"></h3>
+
+        <label>Mã
+            <input id="fCode" maxlength="20" required>
+        </label>
+
+        <label>Tên niên khóa
+            <input id="fName" maxlength="100" required>
+        </label>
+
+        <label>Mô tả
+            <textarea id="fDesc" maxlength="255" rows="2"></textarea>
+        </label>
+
+        <div class="row2">
+            <label>Năm bắt đầu
+                <input id="fStart" type="number" min="1900" max="2100" required>
+            </label>
+
+            <label>Năm kết thúc
+                <input id="fEnd" type="number" min="1900" max="2100" required>
+            </label>
+        </div>
+
+        <p class="err" id="fErr"></p>
+
+        <div class="actions">
+            <button type="button" id="cancelBtn">Hủy</button>
+            <button type="submit" class="primary">Lưu</button>
+        </div>
+    </form>
+</dialog>
+
+<script src="menu.js"></script>
+
+<script>
+    const BASE = '/api/academic-years';
+    const SIZE = 8;
+
+    const LABELS = {
+        code: 'Mã',
+        name: 'Tên niên khóa',
+        startYear: 'Năm bắt đầu',
+        endYear: 'Năm kết thúc'
+    };
+
+    const state = {
+        keyword: '',
+        page: 0,
+        sortBy: 'id',
+        direction: 'asc'
+    };
+
+    let editingId = null;
+
+    const $ = id => document.getElementById(id);
+
+    function el(tag, text, cls) {
+        const element = document.createElement(tag);
+        if (text !== undefined) element.textContent = text;
+        if (cls) element.className = cls;
+        return element;
+    }
+
+    async function errorText(res) {
+        try {
+            const json = await res.json();
+            if (json.message) return json.message;
+        } catch (e) {
+            // Response không có JSON
+        }
+
+        if (res.status === 409) return 'Mã niên khóa đã tồn tại';
+
+        if (res.status === 400) {
+            return 'Dữ liệu không hợp lệ: năm trong khoảng 1900-2100 và năm kết thúc không nhỏ hơn năm bắt đầu';
+        }
+
+        if (res.status === 404) return 'Không tìm thấy bản ghi';
+
+        return 'Lỗi HTTP ' + res.status;
+    }
+
+    function messageRow(text) {
+        const tr = el('tr');
+        const td = el('td', text, 'msg');
+        td.colSpan = 7;
+        tr.append(td);
+        return tr;
+    }
+
+    async function load() {
+        const params = new URLSearchParams({
+            keyword: state.keyword,
+            page: state.page,
+            size: SIZE,
+            sortBy: state.sortBy,
+            direction: state.direction
+        });
+
+        try {
+            const res = await fetch(BASE + '/search?' + params);
+
+            if (!res.ok) {
+                throw new Error(await errorText(res));
+            }
+
+            const data = await res.json();
+
+            if (data.content.length === 0 && data.page > 0) {
+                state.page = Math.max(data.totalPages - 1, 0);
+                return load();
+            }
+
+            render(data);
+        } catch (e) {
+            $('rows').replaceChildren(
+                messageRow('Không tải được dữ liệu: ' + e.message)
+            );
+        }
+    }
+
+    function render(data) {
+        const rows = $('rows');
+
+        if (data.content.length === 0) {
+            rows.replaceChildren(messageRow('Không có dữ liệu'));
+        } else {
+            rows.replaceChildren(
+                ...data.content.map((academicYear, i) => {
+                    const tr = el('tr');
+                    const act = el('td', undefined, 'act');
+
+                    const edit = iconButton('edit', 'Sửa');
+                    edit.onclick = () => openForm(academicYear);
+
+                    const del = iconButton('delete', 'Xóa');
+                    del.onclick = () => remove(academicYear);
+
+                    act.append(edit, del);
+
+                    tr.append(
+                        el('td', data.page * data.size + i + 1, 'num'),
+                        el('td', academicYear.code),
+                        el('td', academicYear.name),
+                        el('td', academicYear.description || ''),
+                        el('td', academicYear.startYear, 'year'),
+                        el('td', academicYear.endYear, 'year'),
+                        act
+                    );
+
+                    return tr;
+                })
+            );
+        }
+
+        $('info').textContent =
+            data.content.length + ' dòng / ' + data.totalElements;
+
+        renderPager(data);
+        renderSortMarks();
+    }
+
+    function renderPager(data) {
+        const prev = el('button', '‹');
+        prev.disabled = data.page === 0;
+        prev.onclick = () => {
+            state.page--;
+            load();
+        };
+
+        const next = el('button', '›');
+        next.disabled = data.page >= data.totalPages - 1;
+        next.onclick = () => {
+            state.page++;
+            load();
+        };
+
+        const pages = [];
+
+        for (let p = 0; p < data.totalPages; p++) {
+            const button = el(
+                'button',
+                p + 1,
+                p === data.page ? 'cur' : ''
+            );
+
+            button.onclick = () => {
+                state.page = p;
+                load();
+            };
+
+            pages.push(button);
+        }
+
+        $('pager').replaceChildren(prev, ...pages, next);
+    }
+
+    function renderSortMarks() {
+        document.querySelectorAll('th.sortable').forEach(th => {
+            const field = th.dataset.sort;
+
+            const mark = state.sortBy === field
+                ? (state.direction === 'asc' ? ' ▲' : ' ▼')
+                : '';
+
+            th.textContent = LABELS[field] + mark;
+        });
+    }
+
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.onclick = () => {
+            const field = th.dataset.sort;
+
+            state.direction =
+                state.sortBy === field && state.direction === 'asc'
+                    ? 'desc'
+                    : 'asc';
+
+            state.sortBy = field;
+            state.page = 0;
+
+            load();
+        };
+    });
+
+    function doSearch() {
+        state.keyword = $('keyword').value.trim();
+        state.page = 0;
+        load();
+    }
+
+    $('searchBtn').onclick = doSearch;
+
+    $('keyword').onkeydown = e => {
+        if (e.key === 'Enter') doSearch();
+    };
+
+    function openForm(academicYear) {
+        editingId = academicYear ? academicYear.id : null;
+
+        $('dlgTitle').textContent = academicYear
+            ? 'Sửa niên khóa'
+            : 'Thêm niên khóa';
+
+        $('fCode').value = academicYear ? academicYear.code : '';
+        $('fName').value = academicYear ? academicYear.name : '';
+
+        $('fDesc').value =
+            academicYear && academicYear.description
+                ? academicYear.description
+                : '';
+
+        $('fStart').value = academicYear ? academicYear.startYear : '';
+        $('fEnd').value = academicYear ? academicYear.endYear : '';
+
+        $('fErr').textContent = '';
+        $('dlg').showModal();
+    }
+
+    $('addBtn').onclick = () => openForm(null);
+    $('cancelBtn').onclick = () => $('dlg').close();
+
+    $('frm').onsubmit = async e => {
+        e.preventDefault();
+
+        const startYear = Number($('fStart').value);
+        const endYear = Number($('fEnd').value);
+
+        const validYear = year =>
+            Number.isInteger(year) &&
+            year >= 1900 &&
+            year <= 2100;
+
+        if (!validYear(startYear) || !validYear(endYear)) {
+            $('fErr').textContent =
+                'Năm phải là số nguyên trong khoảng 1900-2100';
+            return;
+        }
+
+        if (endYear < startYear) {
+            $('fErr').textContent =
+                'Năm kết thúc không được nhỏ hơn năm bắt đầu';
+            return;
+        }
+
+        const body = {
+            code: $('fCode').value.trim(),
+            name: $('fName').value.trim(),
+            description: $('fDesc').value.trim(),
+            startYear,
+            endYear
+        };
+
+        try {
+            const res = await fetch(
+                editingId ? BASE + '/' + editingId : BASE,
+                {
+                    method: editingId ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                }
+            );
+
+            if (!res.ok) {
+                $('fErr').textContent = await errorText(res);
+                return;
+            }
+
+            $('dlg').close();
+            load();
+        } catch (err) {
+            $('fErr').textContent = 'Không kết nối được máy chủ';
+        }
+    };
+
+    async function remove(academicYear) {
+        if (!confirm('Xóa niên khóa "' + academicYear.name + '"?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                BASE + '/' + academicYear.id,
+                { method: 'DELETE' }
+            );
+
+            if (!res.ok) {
+                alert(await errorText(res));
+                return;
+            }
+
+            load();
+        } catch (err) {
+            alert('Không kết nối được máy chủ');
+        }
+    }
+
+    load();
+</script>
+
+</body>
+</html>
