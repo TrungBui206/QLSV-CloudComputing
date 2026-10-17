@@ -9,6 +9,29 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+
+@NamedQuery(
+        name = "getDocumentByName",
+        query = """
+                SELECT d FROM Document d
+                WHERE d.name = :name
+                AND d.deleted = false
+                AND d.active = true
+                AND d.appId = :appId
+                ORDER BY d.version DESC
+                """
+)
+@NamedQuery(
+        name = "getDocumentByAppId",
+        query = """
+                SELECT d FROM Document d
+                WHERE d.appId = :appId
+                AND d.deleted = false
+                ORDER BY d.creationTime DESC
+                """
+)
+
+
 @Entity
 @Table(name = "document")
 @Getter

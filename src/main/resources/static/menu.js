@@ -5,7 +5,9 @@
     const PAGES = [
         { href: 'departments.html', label: 'Quản lý khoa' },
         { href: 'students.html', label: 'Quản lý sinh viên' },
-        { href: 'academic-years.html', label: 'Quản lý niên khóa' }
+        { href: 'academic-years.html', label: 'Quản lý niên khóa' },
+        { href: 'documents.html', label: 'Quản lý tài liệu' }
+
     ];
 
     const SVG_OPEN =

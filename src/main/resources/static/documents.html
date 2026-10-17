@@ -1,0 +1,473 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý tài liệu</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; display: flex; min-height: 100vh; background: #e5e5e5;
+            font-family: system-ui, sans-serif; color: #1f2937; }
+        aside { width: 230px; background: #fff; padding: 16px; }
+        aside h1 { margin: 0; font-size: 15px; color: #14397d; }
+        aside small { color: #6b7280; }
+        aside nav a { display: block; margin-top: 6px; padding: 10px 12px; border-radius: 6px;
+            color: #374151; text-decoration: none; font-size: 14px; }
+        aside nav a.active { background: #e8eefb; font-weight: 600; }
+        main { flex: 1; padding: 24px; }
+        .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        h2 { margin: 0; }
+        .card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .bar { display: flex; gap: 12px; }
+        .bar input { flex: 1; }
+        input, textarea { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font: inherit; }
+        button { padding: 10px 16px; border: 1px solid #14397d; background: #fff;
+            color: #14397d; border-radius: 8px; cursor: pointer; }
+        button.primary { background: #14397d; color: #fff; }
+        button.danger { border-color: #b91c1c; color: #b91c1c; }
+        button:disabled { opacity: .4; cursor: default; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 12px; background: #14397d; color: #fff; text-align: left; font-size: 14px; }
+        th.sortable { cursor: pointer; }
+        td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+        .num { width: 60px; text-align: center; }
+        .act { width: 150px; white-space: nowrap; }
+        .act button { padding: 6px 12px; margin-right: 6px; }
+        .foot { display: flex; justify-content: space-between; align-items: center;
+            margin-top: 12px; color: #6b7280; font-size: 14px; }
+        .pager { display: flex; gap: 6px; }
+        .pager button { padding: 6px 12px; }
+        .pager button.cur { background: #14397d; color: #fff; }
+        .msg { padding: 24px; text-align: center; color: #6b7280; }
+        dialog { border: 0; border-radius: 12px; padding: 24px; width: 440px; }
+        dialog::backdrop { background: rgba(0, 0, 0, .4); }
+        dialog h3 { margin: 0 0 16px; }
+        dialog label { display: block; margin-bottom: 12px; font-size: 14px; }
+        dialog input, dialog textarea { display: block; width: 100%; margin-top: 4px; }
+        .row2 { display: flex; gap: 12px; }
+        .row2 label { flex: 1; }
+        .err { min-height: 20px; margin: 0 0 8px; color: #b91c1c; font-size: 14px; }
+        .actions { display: flex; justify-content: flex-end; gap: 8px; }
+    </style>
+</head>
+<body>
+
+<aside>
+    <h1>QUẢN LÝ MÔN HỌC</h1>
+    <small>HỆ THỐNG QUẢN TRỊ</small>
+    <nav id="nav"></nav>
+</aside>
+
+<main>
+    <div class="head">
+        <h2>Quản lý tài liệu</h2>
+        <button class="primary" id="addBtn">+ Thêm mới</button>
+    </div>
+
+    <div class="card bar">
+        <input id="keyword" placeholder="Tìm theo tên tài liệu, mã hồ sơ...">
+        <button id="searchBtn">Tìm kiếm</button>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th class="num">TT</th>
+                <th>Tên tài liệu</th>
+                <th>Mã hồ sơ</th>
+                <th>Phiên bản</th>
+                <th>Ngày tạo</th>
+                <th class="act">Hành động</th>
+            </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+        </table>
+        <div class="foot">
+            <span id="info"></span>
+            <div class="pager" id="pager"></div>
+        </div>
+    </div>
+</main>
+
+<dialog id="dlg">
+    <form id="frm">
+        <h3>Thêm tài liệu mới</h3>
+
+        <label>Mã hồ sơ
+            <input id="fAppId" maxlength="100" required>
+        </label>
+
+        <label>Chọn tài liệu
+            <input id="fFiles" type="file" multiple required
+                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg">
+        </label>
+
+        <p style="font-size:12px;color:#6b7280;margin:0 0 12px">
+            PDF, Word, Excel, JPG, JPEG. Tối đa 10MB mỗi file.
+        </p>
+
+        <p class="err" id="fErr"></p>
+
+        <div class="actions">
+            <button type="button" id="cancelBtn">Hủy</button>
+            <button type="submit" class="primary" id="saveBtn">Lưu</button>
+        </div>
+    </form>
+</dialog>
+
+<script src="menu.js"></script>
+<script>
+    const BASE = '/api/documents';
+    const SIZE = 8;
+    const state = { keyword: '', page: 0 };
+
+    let documents = [];
+    let filtered = [];
+
+    const $ = id => document.getElementById(id);
+
+    function el(tag, text, cls) {
+        const e = document.createElement(tag);
+        if (text !== undefined) e.textContent = text;
+        if (cls) e.className = cls;
+        return e;
+    }
+
+    async function errorText(res) {
+        try {
+            const data = await res.json();
+            if (data.message) return data.message;
+            if (data.detail) return data.detail;
+        } catch (e) {
+        }
+        return 'Lỗi HTTP ' + res.status;
+    }
+
+    function messageRow(text) {
+        const tr = el('tr');
+        const td = el('td', text, 'msg');
+        td.colSpan = 6;
+        tr.append(td);
+        return tr;
+    }
+
+    function formatDate(value) {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toLocaleString('vi-VN');
+    }
+
+    async function load() {
+        $('rows').replaceChildren(messageRow('Đang tải dữ liệu...'));
+
+        try {
+            const res = await fetch(BASE);
+
+            if (!res.ok) {
+                throw new Error(await errorText(res));
+            }
+
+            documents = await res.json();
+            filterDocuments();
+
+        } catch (e) {
+            documents = [];
+            filtered = [];
+            $('rows').replaceChildren(
+                messageRow('Không tải được dữ liệu: ' + e.message)
+            );
+            renderPager();
+        }
+    }
+
+    function filterDocuments() {
+        const keyword = state.keyword.toLowerCase();
+
+        filtered = documents.filter(d =>
+            (d.name || '').toLowerCase().includes(keyword) ||
+            (d.appId || '').toLowerCase().includes(keyword)
+        );
+
+        const pageCount = Math.max(
+            1,
+            Math.ceil(filtered.length / SIZE)
+        );
+
+        if (state.page >= pageCount) {
+            state.page = pageCount - 1;
+        }
+
+        render();
+    }
+
+    function render() {
+        const rows = $('rows');
+
+        if (filtered.length === 0) {
+            rows.replaceChildren(messageRow('Không có dữ liệu'));
+        } else {
+            const start = state.page * SIZE;
+            const items = filtered.slice(start, start + SIZE);
+
+            rows.replaceChildren(...items.map((d, i) => {
+                const tr = el('tr');
+                const act = el('td', undefined, 'act');
+
+                const download = document.createElement('button');
+                download.type = 'button';
+                download.className = 'icon-btn';
+                download.title = 'Tải xuống';
+                download.setAttribute('aria-label', 'Tải xuống');
+                download.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M12 3v12"/>
+                        <path d="m7 10 5 5 5-5"/>
+                        <path d="M4 18v3h16v-3"/>
+                    </svg>
+                `;
+                download.onclick = () => downloadFile(d);
+
+                const del = iconButton('delete', 'Xóa');
+                del.onclick = () => remove(d);
+
+                act.append(download, del);
+
+                tr.append(
+                    el('td', start + i + 1, 'num'),
+                    el('td', d.name),
+                    el('td', d.appId),
+                    el('td', d.version),
+                    el('td', formatDate(d.creationTime)),
+                    act
+                );
+
+                return tr;
+            }));
+        }
+
+        renderPager();
+    }
+
+    function renderPager() {
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / SIZE));
+
+        const from = total === 0 ? 0 : state.page * SIZE + 1;
+        const to = Math.min((state.page + 1) * SIZE, total);
+
+        $('info').textContent = total === 0
+            ? '0 dòng / 0'
+            : `${from}-${to} dòng / ${total}`;
+
+        const pager = $('pager');
+        pager.replaceChildren();
+
+        const prev = el('button', '‹');
+        prev.disabled = state.page === 0;
+        prev.onclick = () => {
+            state.page--;
+            render();
+        };
+        pager.append(prev);
+
+        for (let i = 0; i < totalPages; i++) {
+            const btn = el(
+                'button',
+                i + 1,
+                i === state.page ? 'cur' : ''
+            );
+
+            btn.onclick = () => {
+                state.page = i;
+                render();
+            };
+
+            pager.append(btn);
+        }
+
+        const next = el('button', '›');
+        next.disabled = state.page >= totalPages - 1;
+        next.onclick = () => {
+            state.page++;
+            render();
+        };
+
+        pager.append(next);
+    }
+
+    function search() {
+        state.keyword = $('keyword').value.trim();
+        state.page = 0;
+        filterDocuments();
+    }
+
+    function openForm() {
+        $('frm').reset();
+        $('fAppId').value = 'APP01';
+        $('fErr').textContent = '';
+        $('saveBtn').disabled = false;
+        $('dlg').showModal();
+    }
+
+    function validateFiles(files) {
+        const allowed = [
+            'pdf', 'doc', 'docx',
+            'xls', 'xlsx', 'jpg', 'jpeg'
+        ];
+
+        let totalSize = 0;
+
+        if (files.length === 0) {
+            return 'Vui lòng chọn tài liệu';
+        }
+
+        for (const file of files) {
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            if (!allowed.includes(ext)) {
+                return 'Định dạng không hỗ trợ: ' + file.name;
+            }
+
+            if (file.size === 0) {
+                return 'File không được để trống: ' + file.name;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                return 'File vượt quá 10MB: ' + file.name;
+            }
+
+            totalSize += file.size;
+        }
+
+        if (totalSize > 50 * 1024 * 1024) {
+            return 'Tổng dung lượng vượt quá 50MB';
+        }
+
+        return null;
+    }
+
+    async function save(event) {
+        event.preventDefault();
+
+        const appId = $('fAppId').value.trim();
+        const files = Array.from($('fFiles').files);
+        const error = validateFiles(files);
+
+        if (!appId) {
+            $('fErr').textContent = 'Vui lòng nhập mã hồ sơ';
+            return;
+        }
+
+        if (error) {
+            $('fErr').textContent = error;
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('appId', appId);
+
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+
+        $('fErr').textContent = '';
+        $('saveBtn').disabled = true;
+
+        try {
+            const res = await fetch(BASE, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!res.ok) {
+                throw new Error(await errorText(res));
+            }
+
+            const saved = await res.json();
+
+            $('dlg').close();
+            $('keyword').value = '';
+            state.keyword = '';
+            state.page = 0;
+
+            await load();
+
+            alert('Đã lưu thành công ' + saved.length + ' tài liệu');
+
+        } catch (e) {
+            $('fErr').textContent = 'Không thể lưu: ' + e.message;
+        } finally {
+            $('saveBtn').disabled = false;
+        }
+    }
+
+    async function downloadFile(d) {
+        try {
+            const url = BASE + '/download?filePath='
+                + encodeURIComponent(d.path);
+
+            const res = await fetch(url);
+
+            if (!res.ok) {
+                throw new Error(await errorText(res));
+            }
+
+            const blob = await res.blob();
+            const objectUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = d.name || 'document';
+
+            document.body.append(link);
+            link.click();
+            link.remove();
+
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+
+        } catch (e) {
+            alert('Tải xuống thất bại: ' + e.message);
+        }
+    }
+
+    async function remove(d) {
+        if (!confirm('Bạn có chắc muốn xóa tài liệu "' + d.name + '"?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(
+                BASE + '/' + encodeURIComponent(d.id),
+                { method: 'DELETE' }
+            );
+
+            if (!res.ok) {
+                throw new Error(await errorText(res));
+            }
+
+            await load();
+
+        } catch (e) {
+            alert('Xóa thất bại: ' + e.message);
+        }
+    }
+
+    $('addBtn').onclick = openForm;
+    $('cancelBtn').onclick = () => $('dlg').close();
+    $('frm').onsubmit = save;
+    $('searchBtn').onclick = search;
+
+    $('keyword').addEventListener('keydown', e => {
+        if (e.key === 'Enter') search();
+    });
+
+    load();
+</script>
+</body>
+</html>

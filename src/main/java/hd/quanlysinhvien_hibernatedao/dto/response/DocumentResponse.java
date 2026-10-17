@@ -12,20 +12,23 @@ public record DocumentResponse(
         String path,
         String owner,
         Double version,
+        Boolean deleted,
+        Boolean active,
         LocalDateTime creationTime,
         LocalDateTime modificationTime
 ) {
-
-    public static DocumentResponse from(Document document) {
+    public static DocumentResponse from(Document d) {
         return new DocumentResponse(
-                document.getId(),
-                document.getAppId(),
-                document.getName(),
-                document.getPath(),
-                document.getOwner(),
-                document.getVersion(),
-                document.getCreationTime(),
-                document.getModificationTime()
+                d.getId(),
+                d.getAppId(),
+                d.getName(),
+                d.getPath(),
+                d.getOwner(),
+                d.getVersion(),
+                d.getDeleted(),
+                d.getActive(),
+                d.getCreationTime(),
+                d.getModificationTime()
         );
     }
 }
