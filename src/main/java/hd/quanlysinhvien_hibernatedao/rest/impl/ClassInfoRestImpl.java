@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,6 +31,7 @@ public class ClassInfoRestImpl implements ClassInfoRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     public ResponseEntity<ClassInfoResponse> createClassInfo(
             ClassInfoRequest request
     ) {
@@ -40,6 +42,7 @@ public class ClassInfoRestImpl implements ClassInfoRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     public ResponseEntity<ClassInfoResponse> updateClassInfo(
             String id,
             ClassInfoRequest request
@@ -73,6 +76,7 @@ public class ClassInfoRestImpl implements ClassInfoRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteClassInfo(String id) {
         logger.info("Deleting ClassInfo: id={}", id);
 
@@ -84,32 +88,45 @@ public class ClassInfoRestImpl implements ClassInfoRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<ClassInfoResponse> getClassInfoById(
             String id
     ) {
-        return ResponseEntity.ok(classInfoService.getById(id));
+        return ResponseEntity.ok(
+                classInfoService.getById(id)
+        );
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<ClassInfoResponse> getClassInfoByName(
             String name
     ) {
-        return ResponseEntity.ok(classInfoService.getByName(name));
+        return ResponseEntity.ok(
+                classInfoService.getByName(name)
+        );
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<ClassInfoResponse>> getAllClassInfo() {
-        return ResponseEntity.ok(classInfoService.getAll());
+        return ResponseEntity.ok(
+                classInfoService.getAll()
+        );
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<ClassInfoResponse>> getClassInfoByDomain(
             String domain
     ) {
-        return ResponseEntity.ok(classInfoService.getByDomain(domain));
+        return ResponseEntity.ok(
+                classInfoService.getByDomain(domain)
+        );
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<ClassInfoResponse>> searchClassInfo(
             String query,
             Integer lowerLimit,
@@ -129,7 +146,12 @@ public class ClassInfoRestImpl implements ClassInfoRest {
     }
 
     @Override
-    public ResponseEntity<Integer> getClassInfoCount(String query) {
-        return ResponseEntity.ok(classInfoService.getCount(query));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Integer> getClassInfoCount(
+            String query
+    ) {
+        return ResponseEntity.ok(
+                classInfoService.getCount(query)
+        );
     }
 }
