@@ -9,6 +9,7 @@ import hd.quanlysinhvien_hibernatedao.service.StudentService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,6 +26,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<StudentResponse>> getAll() {
 
         List<StudentResponse> students = studentService.findAll();
@@ -33,6 +35,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<PageResponse<StudentResponse>> search(
             String keyword,
             Long departmentId,
@@ -54,6 +57,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<StudentResponse> getById(Long id) {
 
         StudentResponse student = studentService.findById(id);
@@ -62,6 +66,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     public ResponseEntity<StudentResponse> create(
             StudentRequest request) {
 
@@ -73,6 +78,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     public ResponseEntity<StudentResponse> update(
             Long id,
             StudentRequest request) {
@@ -83,6 +89,7 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(Long id) {
 
         studentService.delete(id);

@@ -2,9 +2,14 @@
 package hd.quanlysinhvien_hibernatedao.hibernateDao;
 
 import hd.quanlysinhvien_hibernatedao.dao.IGenericDao;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +25,10 @@ public class HibernateGenericDao<Pk, Entity>
     private final Class<Entity> type;
     private final EntityManager entityManager;
 
-    public HibernateGenericDao(Class<Entity> type, EntityManager entityManager) {
+    public HibernateGenericDao(
+            Class<Entity> type,
+            EntityManager entityManager
+    ) {
         super(type, entityManager);
         this.type = type;
         this.entityManager = entityManager;
@@ -38,7 +46,9 @@ public class HibernateGenericDao<Pk, Entity>
     @Transactional
     public Entity create(Entity anEntity) {
         if (anEntity == null) {
-            throw new IllegalArgumentException("Entity cannot be null");
+            throw new IllegalArgumentException(
+                    "Entity cannot be null"
+            );
         }
         return super.save(anEntity);
     }
@@ -47,7 +57,9 @@ public class HibernateGenericDao<Pk, Entity>
     @Transactional
     public Entity update(Entity anEntity) {
         if (anEntity == null) {
-            throw new IllegalArgumentException("Entity cannot be null");
+            throw new IllegalArgumentException(
+                    "Entity cannot be null"
+            );
         }
         return super.saveAndFlush(anEntity);
     }
@@ -56,7 +68,9 @@ public class HibernateGenericDao<Pk, Entity>
     @Transactional
     public Entity saveOrUpdate(Entity anEntity) {
         if (anEntity == null) {
-            throw new IllegalArgumentException("Entity cannot be null");
+            throw new IllegalArgumentException(
+                    "Entity cannot be null"
+            );
         }
         return super.save(anEntity);
     }
@@ -65,7 +79,9 @@ public class HibernateGenericDao<Pk, Entity>
     @Transactional
     public void delete(Entity anEntity) {
         if (anEntity == null) {
-            throw new IllegalArgumentException("Entity cannot be null");
+            throw new IllegalArgumentException(
+                    "Entity cannot be null"
+            );
         }
         super.delete(anEntity);
     }
@@ -74,7 +90,9 @@ public class HibernateGenericDao<Pk, Entity>
     @Transactional
     public void deleteById(Pk id) {
         if (id == null) {
-            throw new IllegalArgumentException("ID cannot be null");
+            throw new IllegalArgumentException(
+                    "ID cannot be null"
+            );
         }
         super.deleteById(id);
     }
@@ -102,40 +120,74 @@ public class HibernateGenericDao<Pk, Entity>
     }
 
     @Override
-    public Entity getByField(String fieldName, Object value) {
+    public Entity getByField(
+            String fieldName,
+            Object value
+    ) {
         if (!isValidIdentifier(fieldName)) {
             return null;
         }
 
-        String jpql = "SELECT e FROM " + type.getSimpleName()
-                + " e WHERE e." + fieldName + " = :value";
-
-        List<Entity> results = entityManager
-                .createQuery(jpql, type)
-                .setParameter("value", value)
+        List<Entity> results = createFieldQuery(
+                fieldName,
+                value
+        )
                 .setMaxResults(1)
                 .getResultList();
 
-        return results.isEmpty() ? null : results.get(0);
+        return results.isEmpty()
+                ? null
+                : results.get(0);
     }
 
     @Override
-    public List<Entity> findByField(String fieldName, Object value) {
+    public List<Entity> findByField(
+            String fieldName,
+            Object value
+    ) {
         if (!isValidIdentifier(fieldName)) {
             return Collections.emptyList();
         }
 
-        String jpql = "SELECT e FROM " + type.getSimpleName()
-                + " e WHERE e." + fieldName + " = :value";
-
-        return entityManager.createQuery(jpql, type)
-                .setParameter("value", value)
-                .getResultList();
+        return createFieldQuery(
+                fieldName,
+                value
+        ).getResultList();
     }
 
-    protected boolean isValidIdentifier(String identifier) {
+    // Tao truy van theo truong bang JPA Criteria API
+    private TypedQuery<Entity> createFieldQuery(
+            String fieldName,
+            Object value
+    ) {
+        CriteriaBuilder builder =
+                entityManager.getCriteriaBuilder();
+
+        CriteriaQuery<Entity> criteriaQuery =
+                builder.createQuery(type);
+
+        Root<Entity> root =
+                criteriaQuery.from(type);
+
+        criteriaQuery.select(root);
+
+        criteriaQuery.where(
+                builder.equal(
+                        root.get(fieldName),
+                        value
+                )
+        );
+
+        return entityManager.createQuery(criteriaQuery);
+    }
+
+    protected boolean isValidIdentifier(
+            String identifier
+    ) {
         return identifier != null
-                && identifier.matches("^[a-zA-Z0-9_]+$");
+                && identifier.matches(
+                "^[a-zA-Z0-9_]+$"
+        );
     }
 
     @Override
@@ -145,7 +197,9 @@ public class HibernateGenericDao<Pk, Entity>
 
     @Override
     @Transactional
-    public List<Entity> createAll(List<Entity> entities) {
+    public List<Entity> createAll(
+            List<Entity> entities
+    ) {
         if (entities == null || entities.isEmpty()) {
             return Collections.emptyList();
         }
@@ -154,7 +208,9 @@ public class HibernateGenericDao<Pk, Entity>
 
     @Override
     @Transactional
-    public void deleteAll(List<Entity> entities) {
+    public void deleteAll(
+            List<Entity> entities
+    ) {
         if (entities == null || entities.isEmpty()) {
             return;
         }
@@ -181,8 +237,12 @@ public class HibernateGenericDao<Pk, Entity>
         entityManager.clear();
     }
 
-    public List<Entity> findByHql(String hql, Map<String, Object> params) {
-        TypedQuery<Entity> query = entityManager.createQuery(hql, type);
+    public List<Entity> findByHql(
+            String hql,
+            Map<String, Object> params
+    ) {
+        TypedQuery<Entity> query =
+                entityManager.createQuery(hql, type);
 
         if (params != null) {
             params.forEach(query::setParameter);
@@ -192,7 +252,10 @@ public class HibernateGenericDao<Pk, Entity>
     }
 
     @Transactional
-    public int executeHql(String hql, Map<String, Object> params) {
+    public int executeHql(
+            String hql,
+            Map<String, Object> params
+    ) {
         Query query = entityManager.createQuery(hql);
 
         if (params != null) {

@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +36,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
     public ResponseEntity<List<DocumentResponse>> create(
             List<MultipartFile> files,
             String appId) {
@@ -60,6 +62,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<DocumentResponse>> listByApp(
             String appId) {
 
@@ -75,6 +78,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<DocumentResponse>> search(
             String query,
             Integer lowerLimit,
@@ -96,6 +100,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<Long> count(
             String query,
             String appId) {
@@ -106,6 +111,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<List<DocumentResponse>> getByApp(
             String appId) {
 
@@ -115,6 +121,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<byte[]> download(
             String filePath) {
 
@@ -122,6 +129,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<byte[]> downloadById(
             String id) {
 
@@ -132,6 +140,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<DocumentResponse> getById(
             String id) {
 
@@ -141,6 +150,7 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(
             String id) {
 

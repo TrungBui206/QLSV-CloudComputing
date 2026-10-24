@@ -9,6 +9,7 @@ import hd.quanlysinhvien_hibernatedao.service.AcademicYearService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,6 +24,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<PageResponse<AcademicYearResponse>> search(
             String keyword,
             int page,
@@ -43,6 +45,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
+    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
     public ResponseEntity<AcademicYearResponse> getById(Long id) {
 
         AcademicYearResponse academicYear =
@@ -52,6 +55,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AcademicYearResponse> create(
             AcademicYearRequest request) {
 
@@ -64,6 +68,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AcademicYearResponse> update(
             Long id,
             AcademicYearRequest request) {
@@ -75,6 +80,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(Long id) {
 
         academicYearService.delete(id);

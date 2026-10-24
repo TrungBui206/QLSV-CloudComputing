@@ -43,16 +43,30 @@ public class SecurityConfig {
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
+
                         .requestMatchers(
-                                "/api/auth/me",
-                                "/api/classes",
-                                "/api/classes/**"
+                                "/api/auth/me"
                         ).authenticated()
+
+                        .requestMatchers(
+                                "/api/classes",
+                                "/api/classes/**",
+                                "/api/students",
+                                "/api/students/**",
+                                "/api/departments",
+                                "/api/departments/**",
+                                "/api/academic-years",
+                                "/api/academic-years/**",
+                                "/api/documents",
+                                "/api/documents/**"
+                        ).authenticated()
+
                         .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth ->
