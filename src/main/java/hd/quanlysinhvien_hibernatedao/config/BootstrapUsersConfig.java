@@ -3,7 +3,7 @@ package hd.quanlysinhvien_hibernatedao.config;
 
 import hd.quanlysinhvien_hibernatedao.dao.IUserDao;
 import hd.quanlysinhvien_hibernatedao.entity.User;
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;

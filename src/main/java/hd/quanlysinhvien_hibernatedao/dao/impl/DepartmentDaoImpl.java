@@ -1,6 +1,7 @@
 
 package hd.quanlysinhvien_hibernatedao.dao.impl;
 
+import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
 import hd.quanlysinhvien_hibernatedao.dao.IDepartmentDao;
 import hd.quanlysinhvien_hibernatedao.entity.Department;
 import hd.quanlysinhvien_hibernatedao.hibernateDao.HibernatePaginationSortingDao;
@@ -23,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 @Repository
@@ -78,12 +78,15 @@ public class DepartmentDaoImpl
             Pageable pageable
     ) {
 
-        // 1. Kiem tra cac truong sap xep
+        // 1. Kiem tra truong sap xep
         validateSort(pageable.getSort());
 
-        // 2. Chuan hoa du lieu tim kiem
-        String nameKeyword = "%" + normalize(name) + "%";
-        String codeKeyword = "%" + normalize(code) + "%";
+        // 2. Su dung SearchUtils de chuan hoa tu khoa
+        String nameKeyword =
+                "%" + SearchUtils.normalize(name) + "%";
+
+        String codeKeyword =
+                "%" + SearchUtils.normalize(code) + "%";
 
         CriteriaBuilder builder =
                 getEntityManager().getCriteriaBuilder();
@@ -122,7 +125,7 @@ public class DepartmentDaoImpl
                 buildSearchPredicate(builder, root)
         );
 
-        // 5. Xay dung dieu kien sap xep an toan
+        // 5. Sap xep theo cac truong hop le
         List<Order> orders = new ArrayList<>();
 
         for (Sort.Order sortOrder : pageable.getSort()) {
@@ -181,7 +184,7 @@ public class DepartmentDaoImpl
         List<Department> departments =
                 query.getResultList();
 
-        // 8. Tra ve ket qua phan trang
+        // 8. Tra ve Page
         return new PageImpl<>(
                 departments,
                 pageable,
@@ -222,12 +225,5 @@ public class DepartmentDaoImpl
                 );
             }
         }
-    }
-
-    private String normalize(String value) {
-
-        return value == null
-                ? ""
-                : value.trim().toLowerCase(Locale.ROOT);
     }
 }

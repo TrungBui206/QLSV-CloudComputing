@@ -1,10 +1,10 @@
 
-package hd.quanlysinhvien_hibernatedao.service.impl;
+package hd.quanlysinhvien_hibernatedao.security.jwt.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.response.AuthResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.UserResponse;
 import hd.quanlysinhvien_hibernatedao.entity.User;
-import hd.quanlysinhvien_hibernatedao.service.JwtTokenService;
+import hd.quanlysinhvien_hibernatedao.security.jwt.JwtTokenService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;

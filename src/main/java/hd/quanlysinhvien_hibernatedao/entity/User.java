@@ -1,7 +1,7 @@
 
 package hd.quanlysinhvien_hibernatedao.entity;
 
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

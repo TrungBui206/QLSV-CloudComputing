@@ -1,6 +1,7 @@
 
 package hd.quanlysinhvien_hibernatedao.dao.impl;
 
+import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
 import hd.quanlysinhvien_hibernatedao.dao.IStudentDao;
 import hd.quanlysinhvien_hibernatedao.entity.Student;
 import hd.quanlysinhvien_hibernatedao.hibernateDao.HibernatePaginationSortingDao;
@@ -24,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 @Repository
@@ -98,24 +98,25 @@ public class StudentDaoImpl
         // 1. Kiem tra truong sap xep
         validateSort(pageable.getSort());
 
-        // 2. Chuan hoa tu khoa tim kiem
-        String normalizedKeyword = keyword == null
-                ? ""
-                : keyword.trim().toLowerCase(Locale.ROOT);
+        // 2. Chuan hoa tu khoa bang SearchUtils
+        String normalizedKeyword =
+                SearchUtils.normalize(keyword);
 
         String pattern = "%" + normalizedKeyword + "%";
 
         CriteriaBuilder builder =
                 getEntityManager().getCriteriaBuilder();
 
-        // 3. Tao truy van dem tong so sinh vien
+        // 3. Tao truy van dem sinh vien
         CriteriaQuery<Long> countQuery =
                 builder.createQuery(Long.class);
 
         Root<Student> countRoot =
                 countQuery.from(Student.class);
 
-        countQuery.select(builder.count(countRoot));
+        countQuery.select(
+                builder.count(countRoot)
+        );
 
         countQuery.where(
                 buildSearchPredicate(
@@ -142,7 +143,7 @@ public class StudentDaoImpl
         Root<Student> root =
                 dataQuery.from(Student.class);
 
-        // Giu lai JOIN FETCH department nhu code cu
+        // Giu lai JOIN FETCH department
         root.fetch("department", JoinType.INNER);
 
         dataQuery.select(root);
@@ -156,7 +157,7 @@ public class StudentDaoImpl
                 )
         );
 
-        // 5. Xay dung thu tu sap xep
+        // 5. Sap xep
         List<Order> orders = buildSortOrders(
                 builder,
                 root,
@@ -182,9 +183,9 @@ public class StudentDaoImpl
                 pageable.getPageSize()
         );
 
-        List<Student> students = query.getResultList();
+        List<Student> students =
+                query.getResultList();
 
-        // 8. Tra ve ket qua
         return new PageImpl<>(
                 students,
                 pageable,
@@ -201,7 +202,7 @@ public class StudentDaoImpl
 
         List<Predicate> predicates = new ArrayList<>();
 
-        // Tim theo ten hoac email
+        // Tim kiem theo ten hoac email
         if (!keyword.isEmpty()) {
 
             ParameterExpression<String> patternParameter =
@@ -225,7 +226,7 @@ public class StudentDaoImpl
             );
         }
 
-        // Loc sinh vien theo khoa
+        // Loc theo khoa
         if (departmentId != null) {
 
             Predicate departmentPredicate = builder.equal(
@@ -236,7 +237,7 @@ public class StudentDaoImpl
             predicates.add(departmentPredicate);
         }
 
-        // Neu khong co dieu kien, lay tat ca
+        // Khong co dieu kien thi lay tat ca
         if (predicates.isEmpty()) {
             return builder.conjunction();
         }
@@ -269,7 +270,6 @@ public class StudentDaoImpl
             String property = order.getProperty();
 
             if (!SORT_FIELDS.contains(property)) {
-
                 throw new IllegalArgumentException(
                         "Trường sắp xếp không hợp lệ: "
                                 + property
@@ -277,13 +277,10 @@ public class StudentDaoImpl
             }
 
             if (order.isAscending()) {
-
                 orders.add(
                         builder.asc(root.get(property))
                 );
-
             } else {
-
                 orders.add(
                         builder.desc(root.get(property))
                 );
@@ -298,7 +295,6 @@ public class StudentDaoImpl
         for (Sort.Order order : sort) {
 
             if (!SORT_FIELDS.contains(order.getProperty())) {
-
                 throw new IllegalArgumentException(
                         "Trường sắp xếp không hợp lệ: "
                                 + order.getProperty()

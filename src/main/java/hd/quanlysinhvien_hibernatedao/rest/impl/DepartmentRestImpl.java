@@ -5,6 +5,7 @@ import hd.quanlysinhvien_hibernatedao.dto.request.DepartmentRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.DepartmentResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.rest.DepartmentRest;
+import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 import hd.quanlysinhvien_hibernatedao.service.DepartmentService;
 
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<List<DepartmentResponse>> getAll() {
 
         List<DepartmentResponse> departments =
@@ -36,13 +37,14 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<PageResponse<DepartmentResponse>> search(
             String keyword,
             int page,
             int size,
             String sortBy,
-            String direction) {
+            String direction
+    ) {
 
         PageResponse<DepartmentResponse> result =
                 departmentService.search(
@@ -57,7 +59,7 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<DepartmentResponse> getById(Long id) {
 
         DepartmentResponse department =
@@ -67,9 +69,10 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<DepartmentResponse> create(
-            DepartmentRequest request) {
+            DepartmentRequest request
+    ) {
 
         DepartmentResponse department =
                 departmentService.create(request);
@@ -80,10 +83,11 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<DepartmentResponse> update(
             Long id,
-            DepartmentRequest request) {
+            DepartmentRequest request
+    ) {
 
         DepartmentResponse department =
                 departmentService.update(id, request);
@@ -92,7 +96,7 @@ public class DepartmentRestImpl implements DepartmentRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<Void> delete(Long id) {
 
         departmentService.delete(id);

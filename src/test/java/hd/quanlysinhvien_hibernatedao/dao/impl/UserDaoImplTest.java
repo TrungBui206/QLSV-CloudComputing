@@ -2,7 +2,7 @@
 package hd.quanlysinhvien_hibernatedao.dao.impl;
 
 import hd.quanlysinhvien_hibernatedao.entity.User;
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 
 import jakarta.persistence.EntityManager;
 

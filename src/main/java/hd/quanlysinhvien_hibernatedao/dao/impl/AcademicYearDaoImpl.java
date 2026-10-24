@@ -1,6 +1,7 @@
 
 package hd.quanlysinhvien_hibernatedao.dao.impl;
 
+import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
 import hd.quanlysinhvien_hibernatedao.dao.IAcademicYearDao;
 import hd.quanlysinhvien_hibernatedao.entity.AcademicYear;
 import hd.quanlysinhvien_hibernatedao.hibernateDao.HibernatePaginationSortingDao;
@@ -23,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 @Repository
@@ -88,13 +88,17 @@ public class AcademicYearDaoImpl
 
         validateSort(pageable.getSort());
 
-        String nameKeyword = "%" + normalize(name) + "%";
-        String codeKeyword = "%" + normalize(code) + "%";
+        // Su dung SearchUtils thay vi tu viet normalize()
+        String nameKeyword =
+                "%" + SearchUtils.normalize(name) + "%";
+
+        String codeKeyword =
+                "%" + SearchUtils.normalize(code) + "%";
 
         CriteriaBuilder builder =
                 getEntityManager().getCriteriaBuilder();
 
-        // Truy vấn đếm tổng số bản ghi
+        // Truy van dem tong so ban ghi
         CriteriaQuery<Long> countQuery =
                 builder.createQuery(Long.class);
 
@@ -113,7 +117,7 @@ public class AcademicYearDaoImpl
                 .setParameter("code", codeKeyword)
                 .getSingleResult();
 
-        // Truy vấn lấy danh sách niên khóa
+        // Truy van lay danh sach nien khoa
         CriteriaQuery<AcademicYear> dataQuery =
                 builder.createQuery(AcademicYear.class);
 
@@ -126,7 +130,7 @@ public class AcademicYearDaoImpl
                 buildSearchPredicate(builder, root)
         );
 
-        // Sắp xếp theo các trường hợp lệ
+        // Sap xep
         List<Order> orders = new ArrayList<>();
 
         for (Sort.Order sortOrder : pageable.getSort()) {
@@ -140,20 +144,16 @@ public class AcademicYearDaoImpl
                     || "code".equals(property))) {
 
                 expression = builder.lower(
-                        root.get(property)
+                        root.<String>get(property)
                 );
 
             } else {
-
                 expression = root.get(property);
             }
 
             if (sortOrder.isAscending()) {
-
                 orders.add(builder.asc(expression));
-
             } else {
-
                 orders.add(builder.desc(expression));
             }
         }
@@ -162,13 +162,14 @@ public class AcademicYearDaoImpl
             dataQuery.orderBy(orders);
         }
 
+        // Thuc thi truy van
         TypedQuery<AcademicYear> query =
-                getEntityManager()
-                        .createQuery(dataQuery);
+                getEntityManager().createQuery(dataQuery);
 
         query.setParameter("name", nameKeyword);
         query.setParameter("code", codeKeyword);
 
+        // Phan trang
         query.setFirstResult(
                 Math.toIntExact(pageable.getOffset())
         );
@@ -193,12 +194,12 @@ public class AcademicYearDaoImpl
     ) {
 
         Predicate namePredicate = builder.like(
-                builder.lower(root.get("name")),
+                builder.lower(root.<String>get("name")),
                 builder.parameter(String.class, "name")
         );
 
         Predicate codePredicate = builder.like(
-                builder.lower(root.get("code")),
+                builder.lower(root.<String>get("code")),
                 builder.parameter(String.class, "code")
         );
 
@@ -220,12 +221,5 @@ public class AcademicYearDaoImpl
                 );
             }
         }
-    }
-
-    private String normalize(String value) {
-
-        return value == null
-                ? ""
-                : value.trim().toLowerCase(Locale.ROOT);
     }
 }

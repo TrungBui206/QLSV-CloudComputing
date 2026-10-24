@@ -5,7 +5,7 @@ import hd.quanlysinhvien_hibernatedao.dto.request.LoginRequest;
 import hd.quanlysinhvien_hibernatedao.dto.request.RegisterRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.AuthResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.UserResponse;
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 import hd.quanlysinhvien_hibernatedao.service.AuthService;
 
 import jakarta.servlet.Filter;

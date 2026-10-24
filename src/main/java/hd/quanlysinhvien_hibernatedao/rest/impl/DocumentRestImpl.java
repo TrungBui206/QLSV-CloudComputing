@@ -3,6 +3,7 @@ package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.response.DocumentResponse;
 import hd.quanlysinhvien_hibernatedao.rest.DocumentRest;
+import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 import hd.quanlysinhvien_hibernatedao.service.DocumentService;
 
 import org.slf4j.Logger;
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,10 +36,11 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
     public ResponseEntity<List<DocumentResponse>> create(
             List<MultipartFile> files,
-            String appId) {
+            String appId
+    ) {
 
         try {
             logger.info(
@@ -62,9 +63,10 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<List<DocumentResponse>> listByApp(
-            String appId) {
+            String appId
+    ) {
 
         if (appId == null || appId.isBlank()) {
             return ResponseEntity.ok(
@@ -78,14 +80,15 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<List<DocumentResponse>> search(
             String query,
             Integer lowerLimit,
             Integer upperLimit,
             String orderBy,
             String orderType,
-            String appId) {
+            String appId
+    ) {
 
         return ResponseEntity.ok(
                 documentService.getDoc(
@@ -100,10 +103,11 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<Long> count(
             String query,
-            String appId) {
+            String appId
+    ) {
 
         return ResponseEntity.ok(
                 documentService.getDocCount(query, appId)
@@ -111,9 +115,10 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<List<DocumentResponse>> getByApp(
-            String appId) {
+            String appId
+    ) {
 
         return ResponseEntity.ok(
                 documentService.listByApp(appId)
@@ -121,17 +126,19 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<byte[]> download(
-            String filePath) {
+            String filePath
+    ) {
 
         return buildDownloadResponse(filePath);
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<byte[]> downloadById(
-            String id) {
+            String id
+    ) {
 
         DocumentResponse document =
                 documentService.getById(id);
@@ -140,9 +147,10 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<DocumentResponse> getById(
-            String id) {
+            String id
+    ) {
 
         return ResponseEntity.ok(
                 documentService.getById(id)
@@ -150,9 +158,10 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<Void> delete(
-            String id) {
+            String id
+    ) {
 
         try {
             documentService.delete(id);
@@ -172,7 +181,8 @@ public class DocumentRestImpl implements DocumentRest {
     }
 
     private ResponseEntity<byte[]> buildDownloadResponse(
-            String filePath) {
+            String filePath
+    ) {
 
         byte[] content = documentService.download(filePath);
         String fileName = documentService.getFileName(filePath);

@@ -2,7 +2,7 @@
 package hd.quanlysinhvien_hibernatedao.dto.response;
 
 import hd.quanlysinhvien_hibernatedao.entity.User;
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 
 import java.time.LocalDateTime;
 

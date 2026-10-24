@@ -5,8 +5,9 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 import hd.quanlysinhvien_hibernatedao.dto.response.AuthResponse;
 import hd.quanlysinhvien_hibernatedao.entity.User;
-import hd.quanlysinhvien_hibernatedao.enums.Role;
+import hd.quanlysinhvien_hibernatedao.security.authorization.Role;
 
+import hd.quanlysinhvien_hibernatedao.security.jwt.impl.JwtTokenServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

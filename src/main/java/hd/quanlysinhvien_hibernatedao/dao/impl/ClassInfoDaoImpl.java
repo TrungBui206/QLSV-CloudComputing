@@ -1,6 +1,7 @@
 
 package hd.quanlysinhvien_hibernatedao.dao.impl;
 
+import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
 import hd.quanlysinhvien_hibernatedao.dao.IClassInfoDao;
 import hd.quanlysinhvien_hibernatedao.entity.ClassInfo;
 import hd.quanlysinhvien_hibernatedao.hibernateDao.HibernateGenericDao;
@@ -18,7 +19,6 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Repository
@@ -72,38 +72,37 @@ public class ClassInfoDaoImpl
             String orderType
     ) {
 
-        String keyword = query == null
-                ? ""
-                : query.trim().toLowerCase(Locale.ROOT);
+        // 1. Chuan hoa tu khoa bang SearchUtils
+        String keyword = SearchUtils.normalize(query);
 
-        // Tao CriteriaBuilder
+        // 2. Tao CriteriaBuilder
         CriteriaBuilder builder =
                 entityManager.getCriteriaBuilder();
 
-        // Tao truy van ClassInfo
+        // 3. Tao truy van ClassInfo
         CriteriaQuery<ClassInfo> criteriaQuery =
                 builder.createQuery(ClassInfo.class);
 
         Root<ClassInfo> root =
                 criteriaQuery.from(ClassInfo.class);
 
-        // Tham so tim kiem
+        // 4. Tham so tim kiem
         ParameterExpression<String> keywordParameter =
                 builder.parameter(String.class, "keyword");
 
         // Tim theo ten lop
         Predicate namePredicate = builder.like(
-                builder.lower(root.get("name")),
+                builder.lower(root.<String>get("name")),
                 keywordParameter
         );
 
         // Tim theo domain
         Predicate domainPredicate = builder.like(
-                builder.lower(root.get("domain")),
+                builder.lower(root.<String>get("domain")),
                 keywordParameter
         );
 
-        // Xu ly description co the null
+        // Tim theo description, xu ly gia tri null
         Expression<String> descriptionExpression =
                 builder.coalesce(
                         root.<String>get("description"),
@@ -115,7 +114,7 @@ public class ClassInfoDaoImpl
                 keywordParameter
         );
 
-        // Ghep cac dieu kien tim kiem bang OR
+        // 5. Ket hop cac dieu kien tim kiem
         Predicate searchPredicate = builder.or(
                 namePredicate,
                 domainPredicate,
@@ -125,7 +124,7 @@ public class ClassInfoDaoImpl
         criteriaQuery.select(root);
         criteriaQuery.where(searchPredicate);
 
-        // Chi cho phep sap xep theo cac truong hop le
+        // 6. Chi cho phep sap xep theo cac truong hop le
         String sortProperty = switch (
                 orderBy == null ? "" : orderBy
                 ) {
@@ -138,7 +137,7 @@ public class ClassInfoDaoImpl
         Expression<?> sortExpression =
                 root.get(sortProperty);
 
-        // Chieu sap xep ASC hoac DESC
+        // 7. Sap xep ASC hoac DESC
         boolean descending =
                 "desc".equalsIgnoreCase(orderType);
 
@@ -146,7 +145,7 @@ public class ClassInfoDaoImpl
                 ? builder.desc(sortExpression)
                 : builder.asc(sortExpression);
 
-        // Sap xep theo id de on dinh thu tu
+        // Sap xep phu theo id ASC
         Order secondaryOrder =
                 builder.asc(root.get("id"));
 
@@ -155,7 +154,7 @@ public class ClassInfoDaoImpl
                 secondaryOrder
         );
 
-        // Thuc thi truy van
+        // 8. Thuc thi truy van
         TypedQuery<ClassInfo> typedQuery =
                 entityManager.createQuery(criteriaQuery);
 
@@ -164,6 +163,7 @@ public class ClassInfoDaoImpl
                 "%" + keyword + "%"
         );
 
+        // 9. Phan trang
         typedQuery.setFirstResult(lowerLimit);
         typedQuery.setMaxResults(
                 upperLimit - lowerLimit
@@ -175,9 +175,8 @@ public class ClassInfoDaoImpl
     @Override
     public long countSearch(String query) {
 
-        String keyword = query == null
-                ? ""
-                : query.trim().toLowerCase(Locale.ROOT);
+        // Dung chung SearchUtils
+        String keyword = SearchUtils.normalize(query);
 
         return entityManager.createQuery(
                         """

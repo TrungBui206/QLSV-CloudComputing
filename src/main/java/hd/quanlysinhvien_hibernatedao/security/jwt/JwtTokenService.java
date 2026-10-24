@@ -1,5 +1,5 @@
 
-package hd.quanlysinhvien_hibernatedao.service;
+package hd.quanlysinhvien_hibernatedao.security.jwt;
 
 import hd.quanlysinhvien_hibernatedao.dto.response.AuthResponse;
 import hd.quanlysinhvien_hibernatedao.entity.User;

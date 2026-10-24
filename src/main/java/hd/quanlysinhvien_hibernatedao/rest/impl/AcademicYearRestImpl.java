@@ -6,6 +6,7 @@ import hd.quanlysinhvien_hibernatedao.dto.response.AcademicYearResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.rest.AcademicYearRest;
 import hd.quanlysinhvien_hibernatedao.service.AcademicYearService;
+import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +25,14 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<PageResponse<AcademicYearResponse>> search(
             String keyword,
             int page,
             int size,
             String sortBy,
-            String direction) {
+            String direction
+    ) {
 
         PageResponse<AcademicYearResponse> result =
                 academicYearService.search(
@@ -45,7 +47,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<AcademicYearResponse> getById(Long id) {
 
         AcademicYearResponse academicYear =
@@ -55,9 +57,10 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<AcademicYearResponse> create(
-            AcademicYearRequest request) {
+            AcademicYearRequest request
+    ) {
 
         AcademicYearResponse academicYear =
                 academicYearService.create(request);
@@ -68,10 +71,11 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<AcademicYearResponse> update(
             Long id,
-            AcademicYearRequest request) {
+            AcademicYearRequest request
+    ) {
 
         AcademicYearResponse academicYear =
                 academicYearService.update(id, request);
@@ -80,7 +84,7 @@ public class AcademicYearRestImpl implements AcademicYearRest {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<Void> delete(Long id) {
 
         academicYearService.delete(id);

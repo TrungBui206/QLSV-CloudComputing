@@ -5,6 +5,7 @@ import hd.quanlysinhvien_hibernatedao.dto.request.StudentRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.StudentResponse;
 import hd.quanlysinhvien_hibernatedao.rest.StudentRest;
+import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 import hd.quanlysinhvien_hibernatedao.service.StudentService;
 
 import org.springframework.http.HttpStatus;
@@ -26,51 +27,57 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<List<StudentResponse>> getAll() {
 
-        List<StudentResponse> students = studentService.findAll();
+        List<StudentResponse> students =
+                studentService.findAll();
 
         return ResponseEntity.ok(students);
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<PageResponse<StudentResponse>> search(
             String keyword,
             Long departmentId,
             int page,
             int size,
             String sortBy,
-            String direction) {
+            String direction
+    ) {
 
-        PageResponse<StudentResponse> result = studentService.search(
-                keyword,
-                departmentId,
-                page,
-                size,
-                sortBy,
-                direction
-        );
+        PageResponse<StudentResponse> result =
+                studentService.search(
+                        keyword,
+                        departmentId,
+                        page,
+                        size,
+                        sortBy,
+                        direction
+                );
 
         return ResponseEntity.ok(result);
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER', 'STUDENT')")
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
     public ResponseEntity<StudentResponse> getById(Long id) {
 
-        StudentResponse student = studentService.findById(id);
+        StudentResponse student =
+                studentService.findById(id);
 
         return ResponseEntity.ok(student);
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
     public ResponseEntity<StudentResponse> create(
-            StudentRequest request) {
+            StudentRequest request
+    ) {
 
-        StudentResponse student = studentService.create(request);
+        StudentResponse student =
+                studentService.create(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -78,18 +85,20 @@ public class StudentRestImpl implements StudentRest {
     }
 
     @Override
-    @PreAuthorize("hasAnyRole('ADMIN', 'LECTURER')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
     public ResponseEntity<StudentResponse> update(
             Long id,
-            StudentRequest request) {
+            StudentRequest request
+    ) {
 
-        StudentResponse student = studentService.update(id, request);
+        StudentResponse student =
+                studentService.update(id, request);
 
         return ResponseEntity.ok(student);
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
     public ResponseEntity<Void> delete(Long id) {
 
         studentService.delete(id);

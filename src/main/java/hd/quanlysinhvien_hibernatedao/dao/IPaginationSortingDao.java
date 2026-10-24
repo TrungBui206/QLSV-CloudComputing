@@ -8,33 +8,74 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
-public interface IPaginationSortingDao<Pk, Entity> extends IGenericDao<Pk, Entity> {
+public interface IPaginationSortingDao<Pk, Entity>
+        extends IGenericDao<Pk, Entity> {
 
-    List<Entity> findAllSorted(String sortBy, String direction);
+    // 1. Sap xep tat ca ban ghi
+    List<Entity> findAllSorted(
+            String sortBy,
+            String direction
+    );
 
-    Page<Entity> findAllPaged(int page, int size, String sortBy, String direction);
+    // 2. Phan trang va sap xep
+    Page<Entity> findAllPaged(
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    );
 
-    List<Entity> findByFieldSorted(String fieldName, Object value, Sort sort);
+    // 3. Tim kiem theo thuoc tinh va sap xep
+    List<Entity> findByFieldSorted(
+            String fieldName,
+            Object value,
+            Sort sort
+    );
 
-    List<Entity> findByFieldSorted(String fieldName, Object value, String sortBy, String direction);
+    List<Entity> findByFieldSorted(
+            String fieldName,
+            Object value,
+            String sortBy,
+            String direction
+    );
 
-    Page<Entity> findByFieldPaged(String fieldName, Object value, Pageable pageable);
+    // 4. Tim kiem theo thuoc tinh va phan trang
+    Page<Entity> findByFieldPaged(
+            String fieldName,
+            Object value,
+            Pageable pageable
+    );
 
-    Page<Entity> findByFieldPaged(String fieldName, Object value, int page, int size, String sortBy, String direction);
+    Page<Entity> findByFieldPaged(
+            String fieldName,
+            Object value,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    );
 
-    List<Entity> searchBySpecification(String search);
+    // 5. Tim kiem bang JPA Specification
+    List<Entity> findAll(
+            Specification<Entity> spec
+    );
 
-    List<Entity> searchBySpecificationSorted(String search, String sortBy, String direction);
+    Page<Entity> findAll(
+            Specification<Entity> spec,
+            Pageable pageable
+    );
 
-    Page<Entity> searchBySpecificationPaged(String search, int page, int size, String sortBy, String direction);
+    List<Entity> findAll(
+            Specification<Entity> spec,
+            Sort sort
+    );
 
-    List<Entity> findAll(Specification<Entity> spec);
+    // 6. Lay tat ca du lieu
+    Page<Entity> getAll(
+            Pageable pageable
+    );
 
-    Page<Entity> findAll(Specification<Entity> spec, Pageable pageable);
-
-    List<Entity> findAll(Specification<Entity> spec, Sort sort);
-
-    Page<Entity> getAll(Pageable pageable);
-
-    List<Entity> getAll(Sort sort);
+    List<Entity> getAll(
+            Sort sort
+    );
 }

@@ -26,6 +26,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         super(type, entityManager);
     }
 
+    // 1. Lay tat ca du lieu co sap xep
     @Override
     public List<Entity> findAllSorted(
             String sortBy,
@@ -36,6 +37,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return findAll(sort);
     }
 
+    // 2. Lay tat ca du lieu co phan trang va sap xep
     @Override
     public Page<Entity> findAllPaged(
             int page,
@@ -54,6 +56,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return findAll(pageable);
     }
 
+    // 3. Tim theo thuoc tinh va sap xep bang Sort
     @Override
     public List<Entity> findByFieldSorted(
             String fieldName,
@@ -80,6 +83,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         );
     }
 
+    // 4. Tim theo thuoc tinh voi sortBy va direction
     @Override
     public List<Entity> findByFieldSorted(
             String fieldName,
@@ -94,6 +98,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         );
     }
 
+    // 5. Tim theo thuoc tinh va phan trang bang Pageable
     @Override
     public Page<Entity> findByFieldPaged(
             String fieldName,
@@ -120,6 +125,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         );
     }
 
+    // 6. Tim theo thuoc tinh va phan trang bang tham so
     @Override
     public Page<Entity> findByFieldPaged(
             String fieldName,
@@ -142,19 +148,17 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         );
     }
 
-    // Xay dung dieu kien tim kiem bang Criteria API
+    // 7. Tao dieu kien tim kiem bang JPA Specification
     private Specification<Entity> createFieldSpecification(
             String fieldName,
             Object value
     ) {
         return (root, query, builder) -> {
 
-            // JPA se kiem tra ten thuoc tinh cua entity.
-            // Khong ghep fieldName vao chuoi JPQL.
+            // JPA xu ly ten thuoc tinh cua Entity
             var path = root.get(fieldName);
 
-            // Giu hanh vi cua dieu kien JPQL "= :value":
-            // Neu value null thi khong co ban ghi khop.
+            // Giu nguyen hanh vi truy van cu khi value = null
             if (value == null) {
                 return builder.disjunction();
             }
@@ -166,39 +170,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         };
     }
 
-    @Override
-    public List<Entity> searchBySpecification(
-            String search
-    ) {
-        throw new UnsupportedOperationException(
-                "Specification search will be implemented later"
-        );
-    }
-
-    @Override
-    public List<Entity> searchBySpecificationSorted(
-            String search,
-            String sortBy,
-            String direction
-    ) {
-        throw new UnsupportedOperationException(
-                "Specification search will be implemented later"
-        );
-    }
-
-    @Override
-    public Page<Entity> searchBySpecificationPaged(
-            String search,
-            int page,
-            int size,
-            String sortBy,
-            String direction
-    ) {
-        throw new UnsupportedOperationException(
-                "Specification search will be implemented later"
-        );
-    }
-
+    // 8. Tim kiem bang Specification
     @Override
     public List<Entity> findAll(
             Specification<Entity> spec
@@ -206,6 +178,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return super.findAll(spec);
     }
 
+    // 9. Tim kiem bang Specification va phan trang
     @Override
     public Page<Entity> findAll(
             Specification<Entity> spec,
@@ -214,6 +187,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return super.findAll(spec, pageable);
     }
 
+    // 10. Tim kiem bang Specification va sap xep
     @Override
     public List<Entity> findAll(
             Specification<Entity> spec,
@@ -222,6 +196,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return super.findAll(spec, sort);
     }
 
+    // 11. Lay tat ca du lieu bang Pageable
     @Override
     public Page<Entity> getAll(
             Pageable pageable
@@ -229,6 +204,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return findAll(pageable);
     }
 
+    // 12. Lay tat ca du lieu bang Sort
     @Override
     public List<Entity> getAll(
             Sort sort
@@ -236,6 +212,7 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return findAll(sort);
     }
 
+    // 13. Tao doi tuong Sort
     protected Sort buildSort(
             String sortBy,
             String direction
@@ -250,40 +227,5 @@ public class HibernatePaginationSortingDao<Pk, Entity>
         return "desc".equalsIgnoreCase(direction)
                 ? Sort.by(sortBy).descending()
                 : Sort.by(sortBy).ascending();
-    }
-
-    // Giu lai de tuong thich voi cac DAO ke thua
-    // co the dang su dung phuong thuc nay.
-    protected String buildOrderClause(
-            Sort sort
-    ) {
-        if (sort == null || sort.isUnsorted()) {
-            return "";
-        }
-
-        StringBuilder clause =
-                new StringBuilder(" ORDER BY ");
-
-        for (Sort.Order order : sort) {
-
-            if (!isValidIdentifier(
-                    order.getProperty()
-            )) {
-                throw new IllegalArgumentException(
-                        "Invalid sort field"
-                );
-            }
-
-            clause.append("e.")
-                    .append(order.getProperty())
-                    .append(" ")
-                    .append(order.getDirection().name())
-                    .append(", ");
-        }
-
-        return clause.substring(
-                0,
-                clause.length() - 2
-        );
     }
 }

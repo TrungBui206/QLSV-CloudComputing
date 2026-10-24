@@ -4,7 +4,6 @@ package hd.quanlysinhvien_hibernatedao.hibernateDao;
 import hd.quanlysinhvien_hibernatedao.dao.IGenericDao;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class HibernateGenericDao<Pk, Entity>
@@ -34,6 +32,10 @@ public class HibernateGenericDao<Pk, Entity>
         this.entityManager = entityManager;
     }
 
+    // ==========================================
+    // 1. THONG TIN ENTITY VA ENTITY MANAGER
+    // ==========================================
+
     public Class<Entity> getType() {
         return type;
     }
@@ -41,6 +43,10 @@ public class HibernateGenericDao<Pk, Entity>
     public EntityManager getEntityManager() {
         return entityManager;
     }
+
+    // ==========================================
+    // 2. CREATE - UPDATE
+    // ==========================================
 
     @Override
     @Transactional
@@ -50,6 +56,7 @@ public class HibernateGenericDao<Pk, Entity>
                     "Entity cannot be null"
             );
         }
+
         return super.save(anEntity);
     }
 
@@ -61,6 +68,7 @@ public class HibernateGenericDao<Pk, Entity>
                     "Entity cannot be null"
             );
         }
+
         return super.saveAndFlush(anEntity);
     }
 
@@ -72,8 +80,13 @@ public class HibernateGenericDao<Pk, Entity>
                     "Entity cannot be null"
             );
         }
+
         return super.save(anEntity);
     }
+
+    // ==========================================
+    // 3. DELETE
+    // ==========================================
 
     @Override
     @Transactional
@@ -83,6 +96,7 @@ public class HibernateGenericDao<Pk, Entity>
                     "Entity cannot be null"
             );
         }
+
         super.delete(anEntity);
     }
 
@@ -94,6 +108,7 @@ public class HibernateGenericDao<Pk, Entity>
                     "ID cannot be null"
             );
         }
+
         super.deleteById(id);
     }
 
@@ -103,11 +118,16 @@ public class HibernateGenericDao<Pk, Entity>
         deleteById(id);
     }
 
+    // ==========================================
+    // 4. FIND BY ID
+    // ==========================================
+
     @Override
     public Entity get(Pk id) {
         if (id == null) {
             return null;
         }
+
         return super.findById(id).orElse(null);
     }
 
@@ -116,8 +136,13 @@ public class HibernateGenericDao<Pk, Entity>
         if (id == null) {
             return Optional.empty();
         }
+
         return super.findById(id);
     }
+
+    // ==========================================
+    // 5. FIND BY FIELD - CRITERIA API
+    // ==========================================
 
     @Override
     public Entity getByField(
@@ -155,7 +180,6 @@ public class HibernateGenericDao<Pk, Entity>
         ).getResultList();
     }
 
-    // Tao truy van theo truong bang JPA Criteria API
     private TypedQuery<Entity> createFieldQuery(
             String fieldName,
             Object value
@@ -181,6 +205,10 @@ public class HibernateGenericDao<Pk, Entity>
         return entityManager.createQuery(criteriaQuery);
     }
 
+    // ==========================================
+    // 6. VALIDATE FIELD NAME
+    // ==========================================
+
     protected boolean isValidIdentifier(
             String identifier
     ) {
@@ -190,10 +218,18 @@ public class HibernateGenericDao<Pk, Entity>
         );
     }
 
+    // ==========================================
+    // 7. GET ALL
+    // ==========================================
+
     @Override
     public List<Entity> getAll() {
         return super.findAll();
     }
+
+    // ==========================================
+    // 8. BULK OPERATIONS
+    // ==========================================
 
     @Override
     @Transactional
@@ -203,6 +239,7 @@ public class HibernateGenericDao<Pk, Entity>
         if (entities == null || entities.isEmpty()) {
             return Collections.emptyList();
         }
+
         return super.saveAll(entities);
     }
 
@@ -214,8 +251,13 @@ public class HibernateGenericDao<Pk, Entity>
         if (entities == null || entities.isEmpty()) {
             return;
         }
+
         super.deleteAll(entities);
     }
+
+    // ==========================================
+    // 9. EXISTS AND COUNT
+    // ==========================================
 
     @Override
     public boolean exists(Pk id) {
@@ -227,6 +269,10 @@ public class HibernateGenericDao<Pk, Entity>
         return super.count();
     }
 
+    // ==========================================
+    // 10. PERSISTENCE CONTEXT
+    // ==========================================
+
     @Override
     public void flush() {
         super.flush();
@@ -235,33 +281,5 @@ public class HibernateGenericDao<Pk, Entity>
     @Override
     public void clear() {
         entityManager.clear();
-    }
-
-    public List<Entity> findByHql(
-            String hql,
-            Map<String, Object> params
-    ) {
-        TypedQuery<Entity> query =
-                entityManager.createQuery(hql, type);
-
-        if (params != null) {
-            params.forEach(query::setParameter);
-        }
-
-        return query.getResultList();
-    }
-
-    @Transactional
-    public int executeHql(
-            String hql,
-            Map<String, Object> params
-    ) {
-        Query query = entityManager.createQuery(hql);
-
-        if (params != null) {
-            params.forEach(query::setParameter);
-        }
-
-        return query.executeUpdate();
     }
 }
