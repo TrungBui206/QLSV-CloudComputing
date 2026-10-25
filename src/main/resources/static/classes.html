@@ -1,0 +1,1214 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý lớp học</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            background: #e5e5e5;
+            color: #1f2937;
+            font-family: system-ui, sans-serif;
+        }
+
+        aside {
+            width: 230px;
+            flex-shrink: 0;
+            background: #fff;
+            padding: 16px;
+        }
+
+        aside h1 {
+            margin: 0;
+            font-size: 15px;
+            color: #14397d;
+        }
+
+        aside small {
+            color: #6b7280;
+        }
+
+        aside nav a {
+            display: block;
+            margin-top: 6px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: #374151;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        aside nav a.active {
+            background: #e8eefb;
+            font-weight: 600;
+        }
+
+        main {
+            flex: 1;
+            min-width: 0;
+            padding: 24px;
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .bar {
+            display: flex;
+            gap: 12px;
+        }
+
+        .bar input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #14397d;
+            border-radius: 8px;
+            background: #fff;
+            color: #14397d;
+            cursor: pointer;
+            font: inherit;
+        }
+
+        button.primary {
+            background: #14397d;
+            color: #fff;
+        }
+
+        button:hover:not(:disabled) {
+            background: #e8eefb;
+        }
+
+        button.primary:hover:not(:disabled) {
+            background: #102e66;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 12px;
+            background: #14397d;
+            color: #fff;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .num {
+            width: 60px;
+            text-align: center;
+        }
+
+        .act {
+            width: 115px;
+            white-space: nowrap;
+        }
+
+        .id-cell {
+            word-break: break-all;
+            font-size: 13px;
+        }
+
+        .foot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .pager {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .pager button {
+            padding: 6px 12px;
+        }
+
+        .pager button.cur {
+            background: #14397d;
+            color: #fff;
+        }
+
+        .msg {
+            padding: 24px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .notice {
+            display: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            background: #e8eefb;
+            color: #14397d;
+            font-size: 14px;
+        }
+
+        .notice.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        dialog {
+            width: min(440px, 95vw);
+            max-height: 90vh;
+            overflow-y: auto;
+            border: none;
+            border-radius: 12px;
+            padding: 24px;
+            color: #1f2937;
+            font-family: inherit;
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        dialog h3 {
+            margin: 0 0 16px;
+            font-size: 19px;
+        }
+
+        dialog label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        dialog input,
+        dialog textarea {
+            display: block;
+            width: 100%;
+            margin-top: 5px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        dialog input:disabled {
+            background: #f3f4f6;
+        }
+
+        .hint {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .err {
+            min-height: 20px;
+            margin: 0 0 8px;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100%;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            .head,
+            .bar,
+            .foot {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside>
+    <h1>QUẢN LÝ MÔN HỌC</h1>
+    <small>HỆ THỐNG QUẢN TRỊ</small>
+    <nav id="nav"></nav>
+</aside>
+
+<main>
+
+    <div class="head">
+        <h2>Quản lý lớp học</h2>
+
+        <button class="primary" id="addBtn">
+            + Thêm lớp
+        </button>
+    </div>
+
+    <div id="notice"
+         class="notice"
+         role="status"
+         aria-live="polite"></div>
+
+    <div class="card bar">
+        <input
+                id="keyword"
+                placeholder="Tìm theo mã định danh, tên lớp hoặc lĩnh vực..."
+                aria-label="Nhập từ khóa tìm kiếm">
+
+        <button id="searchBtn">
+            Tìm kiếm
+        </button>
+
+        <button id="resetBtn">
+            Làm mới
+        </button>
+    </div>
+
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th class="num">STT</th>
+
+                    <th class="sortable" data-sort="id">
+                        Mã định danh
+                    </th>
+
+                    <th class="sortable" data-sort="name">
+                        Tên lớp
+                    </th>
+
+                    <th class="sortable" data-sort="domain">
+                        Lĩnh vực
+                    </th>
+
+                    <th>Mô tả</th>
+
+                    <th class="act">Thao tác</th>
+                </tr>
+                </thead>
+
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+
+        <div class="foot">
+            <span id="info"></span>
+            <div class="pager" id="pager"></div>
+        </div>
+    </div>
+
+</main>
+
+<dialog id="dlg">
+    <form id="frm">
+
+        <h3 id="dlgTitle"></h3>
+
+        <label>
+            Mã định danh lớp
+
+            <input id="fId"
+                   maxlength="100"
+                   required>
+
+            <div class="hint">
+                Mã dùng để phân biệt các lớp trong hệ thống.
+            </div>
+        </label>
+
+        <label>
+            Tên lớp
+
+            <input id="fName"
+                   maxlength="150"
+                   placeholder="Ví dụ: BCSE2024-A"
+                   required>
+        </label>
+
+        <label>
+            Lĩnh vực
+
+            <input id="fDomain"
+                   maxlength="150"
+                   placeholder="Ví dụ: Khoa học máy tính"
+                   required>
+        </label>
+
+        <label>
+            Mô tả
+
+            <textarea id="fDesc"
+                      rows="3"
+                      placeholder="Nhập mô tả lớp học"></textarea>
+        </label>
+
+        <p id="fErr" class="err" role="alert"></p>
+
+        <div class="actions">
+            <button type="button" id="cancelBtn">
+                Hủy
+            </button>
+
+            <button type="submit"
+                    class="primary"
+                    id="saveBtn">
+                Lưu
+            </button>
+        </div>
+
+    </form>
+</dialog>
+
+<script src="menu.js"></script>
+
+<script>
+    // ==========================================
+    // 1. CẤU HÌNH API
+    // ==========================================
+
+    const BASE = '/api/classes';
+
+    const API = {
+        list: BASE,
+        create: BASE,
+        update: id =>
+            BASE + '/' + encodeURIComponent(id),
+        delete: id =>
+            BASE + '/' + encodeURIComponent(id)
+    };
+
+    const AUTH_KEYS = {
+        token: 'qlsv_access_token',
+        type: 'qlsv_token_type',
+        expiresAt: 'qlsv_expires_at'
+    };
+
+    const SIZE = 8;
+
+    const state = {
+        items: [],
+        keyword: '',
+        page: 0,
+        sortBy: null,
+        direction: 'asc'
+    };
+
+    let editingId = null;
+
+    const $ = id => document.getElementById(id);
+
+    // ==========================================
+    // 2. XÁC THỰC JWT
+    // ==========================================
+
+    function clearAuth() {
+        sessionStorage.removeItem(AUTH_KEYS.token);
+        sessionStorage.removeItem(AUTH_KEYS.type);
+        sessionStorage.removeItem(AUTH_KEYS.expiresAt);
+    }
+
+    function redirectToLogin() {
+        window.location.replace(
+            'login.html?next=classes.html'
+        );
+    }
+
+    function getAccessToken() {
+        const token = sessionStorage.getItem(
+            AUTH_KEYS.token
+        );
+
+        const expiresAtText = sessionStorage.getItem(
+            AUTH_KEYS.expiresAt
+        );
+
+        const expiresAt = Number(expiresAtText);
+
+        if (
+            !token ||
+            !expiresAtText ||
+            !Number.isFinite(expiresAt) ||
+            expiresAt <= Date.now()
+        ) {
+            clearAuth();
+            redirectToLogin();
+            return null;
+        }
+
+        return token;
+    }
+
+    async function authorizedFetch(url, options = {}) {
+        const token = getAccessToken();
+
+        if (!token) {
+            throw new Error(
+                'Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn'
+            );
+        }
+
+        const headers = new Headers(
+            options.headers || {}
+        );
+
+        headers.set(
+            'Authorization',
+            'Bearer ' + token
+        );
+
+        const response = await fetch(url, {
+            ...options,
+            headers
+        });
+
+        if (response.status === 401) {
+            clearAuth();
+            redirectToLogin();
+
+            throw new Error(
+                'Phiên đăng nhập đã hết hạn hoặc không hợp lệ'
+            );
+        }
+
+        return response;
+    }
+
+    // ==========================================
+    // 3. CÁC HÀM HỖ TRỢ
+    // ==========================================
+
+    function el(tag, text, className) {
+        const element = document.createElement(tag);
+
+        if (text !== undefined && text !== null) {
+            element.textContent = String(text);
+        }
+
+        if (className) {
+            element.className = className;
+        }
+
+        return element;
+    }
+
+    function showNotice(message, isError = false) {
+        const notice = $('notice');
+
+        notice.textContent = message;
+        notice.className = isError
+            ? 'notice error'
+            : 'notice';
+
+        notice.style.display = 'block';
+    }
+
+    function hideNotice() {
+        const notice = $('notice');
+
+        notice.textContent = '';
+        notice.style.display = 'none';
+    }
+
+    function messageRow(message) {
+        const tr = el('tr');
+        const td = el('td', message, 'msg');
+
+        td.colSpan = 6;
+        tr.append(td);
+
+        return tr;
+    }
+
+    function normalize(value) {
+        return String(value ?? '')
+            .trim()
+            .toLocaleLowerCase('vi');
+    }
+
+    // ==========================================
+    // 4. HIỂN THỊ LĨNH VỰC BẰNG TIẾNG VIỆT
+    // ==========================================
+
+    const DOMAIN_TRANSLATIONS = {
+        'computer science': 'Khoa học máy tính',
+        'information technology': 'Công nghệ thông tin',
+        'software engineering': 'Kỹ thuật phần mềm',
+        'data science': 'Khoa học dữ liệu',
+        'artificial intelligence': 'Trí tuệ nhân tạo',
+        'cyber security': 'An ninh mạng',
+        'cybersecurity': 'An ninh mạng',
+        'computer engineering': 'Kỹ thuật máy tính',
+        'information systems': 'Hệ thống thông tin',
+        'business administration': 'Quản trị kinh doanh'
+    };
+
+    function domainVietnamese(value) {
+        const original = String(value ?? '').trim();
+
+        if (!original) {
+            return 'Chưa cập nhật';
+        }
+
+        return DOMAIN_TRANSLATIONS[
+            original.toLowerCase()
+            ] || original;
+    }
+
+    // ==========================================
+    // 5. THÔNG BÁO LỖI API
+    // ==========================================
+
+    async function errorText(response) {
+        if (response.status === 400) {
+            return 'Thông tin lớp học không hợp lệ';
+        }
+
+        if (response.status === 403) {
+            return 'Tài khoản không có quyền thực hiện thao tác này';
+        }
+
+        if (response.status === 404) {
+            return 'Không tìm thấy lớp học hoặc đường dẫn yêu cầu';
+        }
+
+        if (response.status === 409) {
+            return 'Lớp học đã tồn tại hoặc có dữ liệu liên quan';
+        }
+
+        try {
+            const body = await response.json();
+
+            if (body && body.message) {
+                return body.message;
+            }
+        } catch (error) {
+            // Phản hồi không chứa JSON hợp lệ.
+        }
+
+        return 'Máy chủ trả về mã lỗi ' + response.status;
+    }
+
+    // ==========================================
+    // 6. TẢI DANH SÁCH LỚP
+    // ==========================================
+
+    async function load() {
+        hideNotice();
+
+        $('rows').replaceChildren(
+            messageRow('Đang tải danh sách lớp học...')
+        );
+
+        try {
+            const response = await authorizedFetch(
+                API.list
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    await errorText(response)
+                );
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error(
+                    'Dữ liệu danh sách lớp học không hợp lệ'
+                );
+            }
+
+            state.items = data;
+
+            render();
+
+            return true;
+
+        } catch (error) {
+            state.items = [];
+
+            $('rows').replaceChildren(
+                messageRow(
+                    'Không tải được dữ liệu: ' +
+                    error.message
+                )
+            );
+
+            $('info').textContent = '';
+            $('pager').replaceChildren();
+
+            showNotice(error.message, true);
+
+            return false;
+        }
+    }
+
+    // ==========================================
+    // 7. TÌM KIẾM VÀ SẮP XẾP
+    // ==========================================
+
+    function getFilteredItems() {
+        const keyword = normalize(state.keyword);
+
+        const items = state.items.filter(item => {
+            if (!keyword) {
+                return true;
+            }
+
+            return [
+                item.id,
+                item.name,
+                item.domain,
+                domainVietnamese(item.domain),
+                item.description
+            ].some(value =>
+                normalize(value).includes(keyword)
+            );
+        });
+
+        // Khi chưa nhấn vào cột nào:
+        // Không sắp xếp và không hiện mũi tên.
+        if (state.sortBy !== null) {
+            items.sort((a, b) => {
+                const field = state.sortBy;
+
+                const first = field === 'domain'
+                    ? domainVietnamese(a.domain)
+                    : String(a[field] ?? '');
+
+                const second = field === 'domain'
+                    ? domainVietnamese(b.domain)
+                    : String(b[field] ?? '');
+
+                const result = first.localeCompare(
+                    second,
+                    'vi',
+                    {
+                        numeric: true,
+                        sensitivity: 'base'
+                    }
+                );
+
+                return state.direction === 'desc'
+                    ? -result
+                    : result;
+            });
+        }
+
+        // Luôn trả về mảng, kể cả khi chưa sắp xếp.
+        return items;
+    }
+
+    // ==========================================
+    // 8. HIỂN THỊ MŨI TÊN SẮP XẾP
+    // ==========================================
+
+    function updateClassSortMarks() {
+        const labels = {
+            id: 'Mã định danh',
+            name: 'Tên lớp',
+            domain: 'Lĩnh vực'
+        };
+
+        document.querySelectorAll(
+            'th.sortable'
+        ).forEach(th => {
+            const field = th.dataset.sort;
+
+            const active = state.sortBy === field;
+
+            const mark = active
+                ? (
+                    state.direction === 'asc'
+                        ? ' ▲'
+                        : ' ▼'
+                )
+                : '';
+
+            th.textContent = labels[field] + mark;
+        });
+    }
+
+    // ==========================================
+    // 9. HIỂN THỊ BẢNG
+    // ==========================================
+
+    function render() {
+        const items = getFilteredItems();
+
+        const totalPages = Math.ceil(
+            items.length / SIZE
+        );
+
+        if (totalPages === 0) {
+            state.page = 0;
+        } else if (state.page >= totalPages) {
+            state.page = totalPages - 1;
+        }
+
+        const start = state.page * SIZE;
+
+        const pageItems = items.slice(
+            start,
+            start + SIZE
+        );
+
+        if (pageItems.length === 0) {
+            $('rows').replaceChildren(
+                messageRow(
+                    'Không tìm thấy lớp học phù hợp'
+                )
+            );
+
+        } else {
+            const rows = pageItems.map(
+                (item, index) => {
+                    const tr = el('tr');
+
+                    const actionCell = el(
+                        'td',
+                        undefined,
+                        'act'
+                    );
+
+                    const editBtn = iconButton(
+                        'edit',
+                        'Sửa thông tin lớp học'
+                    );
+
+                    editBtn.onclick = () =>
+                        openForm(item);
+
+                    const deleteBtn = iconButton(
+                        'delete',
+                        'Xóa lớp học'
+                    );
+
+                    deleteBtn.onclick = () =>
+                        removeClass(item);
+
+                    actionCell.append(
+                        editBtn,
+                        deleteBtn
+                    );
+
+                    tr.append(
+                        el(
+                            'td',
+                            start + index + 1,
+                            'num'
+                        ),
+
+                        el(
+                            'td',
+                            item.id,
+                            'id-cell'
+                        ),
+
+                        el(
+                            'td',
+                            item.name
+                        ),
+
+                        el(
+                            'td',
+                            domainVietnamese(item.domain)
+                        ),
+
+                        el(
+                            'td',
+                            item.description ||
+                            'Chưa có mô tả'
+                        ),
+
+                        actionCell
+                    );
+
+                    return tr;
+                }
+            );
+
+            $('rows').replaceChildren(...rows);
+        }
+
+        $('info').textContent =
+            'Hiển thị ' +
+            pageItems.length +
+            ' trên tổng số ' +
+            items.length +
+            ' lớp học';
+
+        renderPager(totalPages);
+
+        updateClassSortMarks();
+    }
+
+    // ==========================================
+    // 10. PHÂN TRANG
+    // ==========================================
+
+    function renderPager(totalPages) {
+        const buttons = [];
+
+        const previous = el(
+            'button',
+            'Trước'
+        );
+
+        previous.disabled =
+            state.page === 0;
+
+        previous.onclick = () => {
+            state.page--;
+            render();
+        };
+
+        buttons.push(previous);
+
+        for (
+            let page = 0;
+            page < totalPages;
+            page++
+        ) {
+            const button = el(
+                'button',
+                page + 1,
+                page === state.page ? 'cur' : ''
+            );
+
+            button.onclick = () => {
+                state.page = page;
+                render();
+            };
+
+            buttons.push(button);
+        }
+
+        const next = el(
+            'button',
+            'Sau'
+        );
+
+        next.disabled =
+            totalPages === 0 ||
+            state.page >= totalPages - 1;
+
+        next.onclick = () => {
+            state.page++;
+            render();
+        };
+
+        buttons.push(next);
+
+        $('pager').replaceChildren(...buttons);
+    }
+
+    // ==========================================
+    // 11. TÌM KIẾM
+    // ==========================================
+
+    function doSearch() {
+        state.keyword =
+            $('keyword').value.trim();
+
+        state.page = 0;
+
+        render();
+    }
+
+    $('searchBtn').onclick = doSearch;
+
+    $('keyword').onkeydown = event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            doSearch();
+        }
+    };
+
+    // ==========================================
+    // 12. LÀM MỚI
+    // ==========================================
+
+    $('resetBtn').onclick = () => {
+        $('keyword').value = '';
+
+        state.keyword = '';
+        state.page = 0;
+
+        // Không chọn sẵn cột sắp xếp.
+        state.sortBy = null;
+        state.direction = 'asc';
+
+        load();
+    };
+
+    // ==========================================
+    // 13. SẮP XẾP THEO CỘT
+    // ==========================================
+
+    document.querySelectorAll(
+        'th.sortable'
+    ).forEach(th => {
+        th.onclick = () => {
+            const field = th.dataset.sort;
+
+            if (state.sortBy === field) {
+                state.direction =
+                    state.direction === 'asc'
+                        ? 'desc'
+                        : 'asc';
+            } else {
+                state.sortBy = field;
+                state.direction = 'asc';
+            }
+
+            state.page = 0;
+
+            render();
+        };
+    });
+
+    // ==========================================
+    // 14. MỞ FORM THÊM VÀ SỬA
+    // ==========================================
+
+    function openForm(item) {
+        editingId = item ? item.id : null;
+
+        $('dlgTitle').textContent = item
+            ? 'Cập nhật thông tin lớp học'
+            : 'Thêm lớp học mới';
+
+        $('fId').value =
+            item ? item.id : '';
+
+        $('fId').disabled =
+            Boolean(item);
+
+        $('fName').value =
+            item ? item.name : '';
+
+        $('fDomain').value =
+            item ? (item.domain || '') : '';
+
+        $('fDesc').value =
+            item ? (item.description || '') : '';
+
+        $('fErr').textContent = '';
+        $('saveBtn').disabled = false;
+
+        $('dlg').showModal();
+    }
+
+    $('addBtn').onclick = () =>
+        openForm(null);
+
+    $('cancelBtn').onclick = () =>
+        $('dlg').close();
+
+    // ==========================================
+    // 15. LƯU LỚP HỌC
+    // ==========================================
+
+    $('frm').onsubmit = async event => {
+        event.preventDefault();
+
+        const id = $('fId').value.trim();
+        const name = $('fName').value.trim();
+        const domain = $('fDomain').value.trim();
+        const description = $('fDesc').value.trim();
+
+        if (!id || !name || !domain) {
+            $('fErr').textContent =
+                'Vui lòng nhập đầy đủ mã định danh, tên lớp và lĩnh vực';
+
+            return;
+        }
+
+        const body = {
+            id,
+            name,
+            domain,
+            description
+        };
+
+        const isEdit = editingId !== null;
+
+        const url = isEdit
+            ? API.update(editingId)
+            : API.create;
+
+        $('saveBtn').disabled = true;
+        $('fErr').textContent = '';
+
+        try {
+            const response = await authorizedFetch(
+                url,
+                {
+                    method: isEdit ? 'PUT' : 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify(body)
+                }
+            );
+
+            if (!response.ok) {
+                $('fErr').textContent =
+                    await errorText(response);
+
+                return;
+            }
+
+            $('dlg').close();
+
+            const loaded = await load();
+
+            if (loaded) {
+                showNotice(
+                    isEdit
+                        ? 'Cập nhật lớp học thành công'
+                        : 'Thêm lớp học thành công'
+                );
+            }
+
+        } catch (error) {
+            $('fErr').textContent =
+                'Không thể lưu lớp học: ' +
+                error.message;
+
+        } finally {
+            $('saveBtn').disabled = false;
+        }
+    };
+
+    // ==========================================
+    // 16. XÓA LỚP HỌC
+    // ==========================================
+
+    async function removeClass(item) {
+        const confirmed = confirm(
+            'Bạn có chắc chắn muốn xóa lớp "' +
+            item.name +
+            '" không?'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const response = await authorizedFetch(
+                API.delete(item.id),
+                {
+                    method: 'DELETE'
+                }
+            );
+
+            if (!response.ok) {
+                showNotice(
+                    await errorText(response),
+                    true
+                );
+
+                return;
+            }
+
+            const loaded = await load();
+
+            if (loaded) {
+                showNotice(
+                    'Xóa lớp học thành công'
+                );
+            }
+
+        } catch (error) {
+            showNotice(
+                'Không thể xóa lớp học: ' +
+                error.message,
+                true
+            );
+        }
+    }
+
+    // ==========================================
+    // 17. KHỞI TẠO
+    // ==========================================
+
+    if (getAccessToken()) {
+        load();
+    }
+
+</script>
+
+</body>
+</html>

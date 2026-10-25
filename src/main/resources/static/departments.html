@@ -3,11 +3,15 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
     <title>Quản lý khoa</title>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -18,9 +22,22 @@
             color: #1f2937;
         }
 
-        aside { width: 230px; background: #fff; padding: 16px; }
-        aside h1 { margin: 0; font-size: 15px; color: #14397d; }
-        aside small { color: #6b7280; }
+        aside {
+            width: 230px;
+            flex-shrink: 0;
+            background: #fff;
+            padding: 16px;
+        }
+
+        aside h1 {
+            margin: 0;
+            font-size: 15px;
+            color: #14397d;
+        }
+
+        aside small {
+            color: #6b7280;
+        }
 
         aside nav a {
             display: block;
@@ -32,19 +49,48 @@
             font-size: 14px;
         }
 
-        aside nav a.active { background: #e8eefb; font-weight: 600; }
+        aside nav a.active {
+            background: #e8eefb;
+            font-weight: 600;
+        }
 
-        main { flex: 1; padding: 24px; }
-        .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        h2 { margin: 0; }
-        .card { background: #fff; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-        .bar { display: flex; gap: 12px; }
+        main {
+            flex: 1;
+            min-width: 0;
+            padding: 24px;
+        }
+
+        .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        h2 {
+            margin: 0;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .bar {
+            display: flex;
+            gap: 12px;
+        }
 
         .bar input {
             flex: 1;
+            min-width: 0;
             padding: 10px 12px;
             border: 1px solid #d1d5db;
             border-radius: 8px;
+            font: inherit;
         }
 
         button {
@@ -54,48 +100,130 @@
             color: #14397d;
             border-radius: 8px;
             cursor: pointer;
+            font: inherit;
         }
 
-        button.primary { background: #14397d; color: #fff; }
-        button.danger { border-color: #b91c1c; color: #b91c1c; }
-        button:disabled { opacity: .4; cursor: default; }
+        button.primary {
+            background: #14397d;
+            color: #fff;
+        }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { padding: 12px; background: #14397d; color: #fff; text-align: left; font-size: 14px; }
-        th.sortable { cursor: pointer; }
-        td { padding: 12px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+        button.primary:hover:not(:disabled) {
+            background: #102e66;
+        }
 
-        .num { width: 60px; text-align: center; }
-        .act { width: 150px; white-space: nowrap; }
-        .act button { padding: 6px 12px; margin-right: 6px; }
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            padding: 12px;
+            background: #14397d;
+            color: #fff;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        .num {
+            width: 60px;
+            text-align: center;
+        }
+
+        .act {
+            width: 150px;
+            white-space: nowrap;
+        }
 
         .foot {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
             margin-top: 12px;
             color: #6b7280;
             font-size: 14px;
         }
 
-        .pager { display: flex; gap: 6px; }
-        .pager button { padding: 6px 12px; }
-        .pager button.cur { background: #14397d; color: #fff; }
-
-        .msg { padding: 24px; text-align: center; color: #6b7280; }
-
-        dialog {
-            border: 0;
-            border-radius: 12px;
-            padding: 24px;
-            width: 420px;
+        .pager {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
-        dialog::backdrop { background: rgba(0, 0, 0, .4); }
-        dialog h3 { margin: 0 0 16px; }
-        dialog label { display: block; margin-bottom: 12px; font-size: 14px; }
+        .pager button {
+            padding: 6px 12px;
+        }
 
-        dialog input, dialog textarea {
+        .pager button.cur {
+            background: #14397d;
+            color: #fff;
+        }
+
+        .msg {
+            padding: 24px;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .notice {
+            display: none;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            background: #e8eefb;
+            color: #14397d;
+            font-size: 14px;
+        }
+
+        .notice.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        dialog {
+            border: none;
+            border-radius: 12px;
+            padding: 24px;
+            width: min(420px, 95vw);
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        dialog h3 {
+            margin: 0 0 16px;
+        }
+
+        dialog label {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        dialog input,
+        dialog textarea {
             display: block;
             width: 100%;
             margin-top: 4px;
@@ -105,8 +233,38 @@
             font: inherit;
         }
 
-        .err { min-height: 20px; margin: 0 0 8px; color: #b91c1c; font-size: 14px; }
-        .actions { display: flex; justify-content: flex-end; gap: 8px; }
+        .err {
+            min-height: 20px;
+            margin: 0 0 8px;
+            color: #b91c1c;
+            font-size: 14px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100%;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            .head,
+            .bar,
+            .foot {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </head>
 
@@ -119,67 +277,152 @@
 </aside>
 
 <main>
+
     <div class="head">
         <h2>Quản lý khoa</h2>
-        <button class="primary" id="addBtn">+ Thêm mới</button>
+
+        <button class="primary" id="addBtn">
+            + Thêm khoa
+        </button>
+    </div>
+
+    <div id="notice"
+         class="notice"
+         role="status"
+         aria-live="polite">
     </div>
 
     <div class="card bar">
-        <input id="keyword" placeholder="Tìm theo mã hoặc tên...">
-        <button id="searchBtn">Tìm kiếm</button>
+
+        <input
+                id="keyword"
+                placeholder="Tìm theo mã khoa hoặc tên khoa..."
+                aria-label="Tìm kiếm khoa">
+
+        <button id="searchBtn">
+            Tìm kiếm
+        </button>
+
+        <button id="resetBtn">
+            Làm mới
+        </button>
+
     </div>
 
     <div class="card">
-        <table>
-            <thead>
-            <tr>
-                <th class="num">TT</th>
-                <th class="sortable" data-sort="code">Mã</th>
-                <th class="sortable" data-sort="name">Tên</th>
-                <th>Mô tả</th>
-                <th class="act">Hành động</th>
-            </tr>
-            </thead>
-            <tbody id="rows"></tbody>
-        </table>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th class="num">
+                        STT
+                    </th>
+
+                    <th class="sortable" data-sort="code">
+                        Mã khoa
+                    </th>
+
+                    <th class="sortable" data-sort="name">
+                        Tên khoa
+                    </th>
+
+                    <th>
+                        Mô tả
+                    </th>
+
+                    <th class="act">
+                        Thao tác
+                    </th>
+                </tr>
+                </thead>
+
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
 
         <div class="foot">
             <span id="info"></span>
             <div class="pager" id="pager"></div>
         </div>
+
     </div>
+
 </main>
 
 <dialog id="dlg">
+
     <form id="frm">
+
         <h3 id="dlgTitle"></h3>
 
-        <label>Mã
-            <input id="fCode" maxlength="20" required>
+        <label>
+            Mã khoa
+
+            <input
+                    id="fCode"
+                    maxlength="20"
+                    required>
         </label>
 
-        <label>Tên
-            <input id="fName" maxlength="100" required>
+        <label>
+            Tên khoa
+
+            <input
+                    id="fName"
+                    maxlength="100"
+                    required>
         </label>
 
-        <label>Mô tả
-            <textarea id="fDesc" maxlength="255" rows="3"></textarea>
+        <label>
+            Mô tả
+
+            <textarea
+                    id="fDesc"
+                    maxlength="255"
+                    rows="3"></textarea>
         </label>
 
-        <p class="err" id="fErr"></p>
+        <p id="fErr"
+           class="err"
+           role="alert"></p>
 
         <div class="actions">
-            <button type="button" id="cancelBtn">Hủy</button>
-            <button type="submit" class="primary">Lưu</button>
+
+            <button
+                    type="button"
+                    id="cancelBtn">
+                Hủy
+            </button>
+
+            <button
+                    type="submit"
+                    class="primary"
+                    id="saveBtn">
+                Lưu
+            </button>
+
         </div>
+
     </form>
+
 </dialog>
 
 <script src="menu.js"></script>
 
 <script>
+    // ==========================================
+    // 1. CẤU HÌNH API
+    // ==========================================
+
     const BASE = '/api/departments';
     const SIZE = 8;
+
+    const AUTH_KEYS = {
+        token: 'qlsv_access_token',
+        type: 'qlsv_token_type',
+        expiresAt: 'qlsv_expires_at'
+    };
 
     const state = {
         keyword: '',
@@ -192,38 +435,164 @@
 
     const $ = id => document.getElementById(id);
 
+    // ==========================================
+    // 2. XÁC THỰC JWT
+    // ==========================================
+
+    function clearAuth() {
+        sessionStorage.removeItem(AUTH_KEYS.token);
+        sessionStorage.removeItem(AUTH_KEYS.type);
+        sessionStorage.removeItem(AUTH_KEYS.expiresAt);
+    }
+
+    function redirectToLogin() {
+        window.location.replace(
+            'login.html?next=departments.html'
+        );
+    }
+
+    function getAccessToken() {
+        const token = sessionStorage.getItem(
+            AUTH_KEYS.token
+        );
+
+        const expiresAt = Number(
+            sessionStorage.getItem(
+                AUTH_KEYS.expiresAt
+            )
+        );
+
+        if (
+            !token ||
+            !Number.isFinite(expiresAt) ||
+            expiresAt <= Date.now()
+        ) {
+            clearAuth();
+            redirectToLogin();
+            return null;
+        }
+
+        return token;
+    }
+
+    async function authorizedFetch(url, options = {}) {
+        const token = getAccessToken();
+
+        if (!token) {
+            throw new Error(
+                'Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn'
+            );
+        }
+
+        const headers = new Headers(
+            options.headers || {}
+        );
+
+        headers.set(
+            'Authorization',
+            'Bearer ' + token
+        );
+
+        const response = await fetch(url, {
+            ...options,
+            headers
+        });
+
+        if (response.status === 401) {
+            clearAuth();
+            redirectToLogin();
+
+            throw new Error(
+                'Phiên đăng nhập đã hết hạn hoặc không hợp lệ'
+            );
+        }
+
+        return response;
+    }
+
+    // ==========================================
+    // 3. CÁC HÀM HỖ TRỢ
+    // ==========================================
+
     function el(tag, text, cls) {
         const element = document.createElement(tag);
-        if (text !== undefined) element.textContent = text;
-        if (cls) element.className = cls;
+
+        if (text !== undefined && text !== null) {
+            element.textContent = String(text);
+        }
+
+        if (cls) {
+            element.className = cls;
+        }
+
         return element;
     }
 
-    async function errorText(res) {
-        try {
-            const json = await res.json();
-            if (json.message) return json.message;
-        } catch (e) {
-            // Response không có JSON
-        }
+    function showNotice(message, isError = false) {
+        const notice = $('notice');
 
-        if (res.status === 409) {
-            return 'Xung đột: mã đã tồn tại hoặc khoa đang có sinh viên';
-        }
+        notice.textContent = message;
 
-        if (res.status === 400) return 'Dữ liệu không hợp lệ';
-        if (res.status === 404) return 'Không tìm thấy bản ghi';
+        notice.className = isError
+            ? 'notice error'
+            : 'notice';
 
-        return 'Lỗi HTTP ' + res.status;
+        notice.style.display = 'block';
     }
 
-    function messageRow(text) {
+    function hideNotice() {
+        $('notice').style.display = 'none';
+    }
+
+    async function errorText(response) {
+        if (response.status === 403) {
+            return 'Tài khoản không có quyền thực hiện thao tác này';
+        }
+
+        if (response.status === 409) {
+            return 'Mã khoa đã tồn tại hoặc khoa đang có dữ liệu liên quan';
+        }
+
+        if (response.status === 404) {
+            return 'Không tìm thấy khoa hoặc đường dẫn yêu cầu';
+        }
+
+        try {
+            const body = await response.json();
+
+            if (body && body.message) {
+                return body.message;
+            }
+
+        } catch (error) {
+            // Máy chủ không trả về JSON hợp lệ.
+        }
+
+        if (response.status === 400) {
+            return 'Thông tin khoa không hợp lệ';
+        }
+
+        return 'Máy chủ trả về mã lỗi ' + response.status;
+    }
+
+    function messageRow(message) {
         const tr = el('tr');
-        const td = el('td', text, 'msg');
+
+        const td = el(
+            'td',
+            message,
+            'msg'
+        );
+
         td.colSpan = 5;
         tr.append(td);
+
         return tr;
     }
+
+    // ==========================================
+    // 4. TẢI DANH SÁCH KHOA BẰNG JWT
+    // ==========================================
 
     async function load() {
         const params = new URLSearchParams({
@@ -234,53 +603,135 @@
             direction: state.direction
         });
 
-        try {
-            const res = await fetch(BASE + '/search?' + params);
+        $('rows').replaceChildren(
+            messageRow('Đang tải danh sách khoa...')
+        );
 
-            if (!res.ok) {
-                throw new Error(await errorText(res));
+        try {
+            const response = await authorizedFetch(
+                BASE + '/search?' + params.toString()
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    await errorText(response)
+                );
             }
 
-            const data = await res.json();
+            const data = await response.json();
 
-            if (data.content.length === 0 && data.page > 0) {
-                state.page = Math.max(data.totalPages - 1, 0);
+            if (
+                !data ||
+                !Array.isArray(data.content) ||
+                !Number.isInteger(data.page) ||
+                !Number.isInteger(data.totalPages)
+            ) {
+                throw new Error(
+                    'Dữ liệu phân trang khoa không hợp lệ'
+                );
+            }
+
+            if (
+                data.content.length === 0 &&
+                data.page > 0
+            ) {
+                state.page = Math.max(
+                    data.totalPages - 1,
+                    0
+                );
+
                 return load();
             }
 
             render(data);
-        } catch (e) {
+
+            return true;
+
+        } catch (error) {
             $('rows').replaceChildren(
-                messageRow('Không tải được dữ liệu: ' + e.message)
+                messageRow(
+                    'Không tải được dữ liệu: ' +
+                    error.message
+                )
             );
+
+            $('info').textContent = '';
+            $('pager').replaceChildren();
+
+            showNotice(error.message, true);
+
+            return false;
         }
     }
+
+    // ==========================================
+    // 5. HIỂN THỊ DANH SÁCH KHOA
+    // ==========================================
 
     function render(data) {
         const rows = $('rows');
 
         if (data.content.length === 0) {
-            rows.replaceChildren(messageRow('Không có dữ liệu'));
+            rows.replaceChildren(
+                messageRow('Không có dữ liệu khoa')
+            );
+
         } else {
             rows.replaceChildren(
                 ...data.content.map((department, i) => {
                     const tr = el('tr');
-                    const act = el('td', undefined, 'act');
 
-                    const edit = iconButton('edit', 'Sửa');
-                    edit.onclick = () => openForm(department);
+                    const actionCell = el(
+                        'td',
+                        undefined,
+                        'act'
+                    );
 
-                    const del = iconButton('delete', 'Xóa');
-                    del.onclick = () => remove(department);
+                    const editButton = iconButton(
+                        'edit',
+                        'Sửa khoa'
+                    );
 
-                    act.append(edit, del);
+                    editButton.onclick = () =>
+                        openForm(department);
+
+                    const deleteButton = iconButton(
+                        'delete',
+                        'Xóa khoa'
+                    );
+
+                    deleteButton.onclick = () =>
+                        removeDepartment(department);
+
+                    actionCell.append(
+                        editButton,
+                        deleteButton
+                    );
 
                     tr.append(
-                        el('td', data.page * data.size + i + 1, 'num'),
-                        el('td', department.code),
-                        el('td', department.name),
-                        el('td', department.description || ''),
-                        act
+                        el(
+                            'td',
+                            data.page * data.size + i + 1,
+                            'num'
+                        ),
+
+                        el(
+                            'td',
+                            department.code
+                        ),
+
+                        el(
+                            'td',
+                            department.name
+                        ),
+
+                        el(
+                            'td',
+                            department.description ||
+                            'Chưa có mô tả'
+                        ),
+
+                        actionCell
                     );
 
                     return tr;
@@ -289,22 +740,42 @@
         }
 
         $('info').textContent =
-            data.content.length + ' dòng / ' + data.totalElements;
+            'Hiển thị ' +
+            data.content.length +
+            ' trên tổng số ' +
+            data.totalElements +
+            ' khoa';
 
         renderPager(data);
         renderSortMarks();
     }
 
+    // ==========================================
+    // 6. PHÂN TRANG
+    // ==========================================
+
     function renderPager(data) {
-        const prev = el('button', '‹');
-        prev.disabled = data.page === 0;
-        prev.onclick = () => {
+        const previous = el(
+            'button',
+            'Trước'
+        );
+
+        previous.disabled =
+            data.page === 0;
+
+        previous.onclick = () => {
             state.page--;
             load();
         };
 
-        const next = el('button', '›');
-        next.disabled = data.page >= data.totalPages - 1;
+        const next = el(
+            'button',
+            'Sau'
+        );
+
+        next.disabled =
+            data.page >= data.totalPages - 1;
+
         next.onclick = () => {
             state.page++;
             load();
@@ -312,144 +783,294 @@
 
         const pages = [];
 
-        for (let p = 0; p < data.totalPages; p++) {
+        for (
+            let page = 0;
+            page < data.totalPages;
+            page++
+        ) {
             const button = el(
                 'button',
-                p + 1,
-                p === data.page ? 'cur' : ''
+                page + 1,
+                page === data.page ? 'cur' : ''
             );
 
             button.onclick = () => {
-                state.page = p;
+                state.page = page;
                 load();
             };
 
             pages.push(button);
         }
 
-        $('pager').replaceChildren(prev, ...pages, next);
+        $('pager').replaceChildren(
+            previous,
+            ...pages,
+            next
+        );
     }
 
+    // ==========================================
+    // 7. HIỂN THỊ TRẠNG THÁI SẮP XẾP
+    // ==========================================
+
     function renderSortMarks() {
-        document.querySelectorAll('th.sortable').forEach(th => {
-            const base = th.dataset.sort === 'code'
-                ? 'Mã'
-                : 'Tên';
+        document.querySelectorAll(
+            'th.sortable'
+        ).forEach(th => {
+            const field = th.dataset.sort;
 
-            const mark = state.sortBy === th.dataset.sort
-                ? (state.direction === 'asc' ? ' ▲' : ' ▼')
-                : '';
+            const label = field === 'code'
+                ? 'Mã khoa'
+                : 'Tên khoa';
 
-            th.textContent = base + mark;
+            const mark =
+                state.sortBy === field
+                    ? (
+                        state.direction === 'asc'
+                            ? ' ▲'
+                            : ' ▼'
+                    )
+                    : '';
+
+            th.textContent = label + mark;
         });
     }
 
-    document.querySelectorAll('th.sortable').forEach(th => {
+    // ==========================================
+    // 8. SẮP XẾP
+    // ==========================================
+
+    document.querySelectorAll(
+        'th.sortable'
+    ).forEach(th => {
         th.onclick = () => {
             const field = th.dataset.sort;
 
             state.direction =
-                state.sortBy === field && state.direction === 'asc'
+                state.sortBy === field &&
+                state.direction === 'asc'
                     ? 'desc'
                     : 'asc';
 
             state.sortBy = field;
             state.page = 0;
 
+            hideNotice();
             load();
         };
     });
 
+    // ==========================================
+    // 9. TÌM KIẾM KHOA
+    // ==========================================
+
     function doSearch() {
-        state.keyword = $('keyword').value.trim();
+        state.keyword =
+            $('keyword').value.trim();
+
         state.page = 0;
+
+        hideNotice();
         load();
     }
 
     $('searchBtn').onclick = doSearch;
 
-    $('keyword').onkeydown = e => {
-        if (e.key === 'Enter') doSearch();
+    $('keyword').onkeydown = event => {
+        if (event.key === 'Enter') {
+            doSearch();
+        }
     };
 
+    $('resetBtn').onclick = () => {
+        $('keyword').value = '';
+
+        state.keyword = '';
+        state.page = 0;
+        state.sortBy = 'id';
+        state.direction = 'asc';
+
+        hideNotice();
+        load();
+    };
+
+    // ==========================================
+    // 10. MỞ BIỂU MẪU THÊM / SỬA
+    // ==========================================
+
     function openForm(department) {
-        editingId = department ? department.id : null;
+        editingId = department
+            ? department.id
+            : null;
 
         $('dlgTitle').textContent = department
-            ? 'Sửa khoa'
-            : 'Thêm khoa';
+            ? 'Cập nhật thông tin khoa'
+            : 'Thêm khoa mới';
 
-        $('fCode').value = department ? department.code : '';
-        $('fName').value = department ? department.name : '';
+        $('fCode').value = department
+            ? department.code
+            : '';
 
-        $('fDesc').value =
-            department && department.description
-                ? department.description
-                : '';
+        $('fName').value = department
+            ? department.name
+            : '';
+
+        $('fDesc').value = department
+            ? (department.description || '')
+            : '';
 
         $('fErr').textContent = '';
+        $('saveBtn').disabled = false;
+
         $('dlg').showModal();
     }
 
-    $('addBtn').onclick = () => openForm(null);
-    $('cancelBtn').onclick = () => $('dlg').close();
+    $('addBtn').onclick = () =>
+        openForm(null);
 
-    $('frm').onsubmit = async e => {
-        e.preventDefault();
+    $('cancelBtn').onclick = () =>
+        $('dlg').close();
+
+    // ==========================================
+    // 11. THÊM / SỬA KHOA KÈM JWT
+    // ==========================================
+
+    $('frm').onsubmit = async event => {
+        event.preventDefault();
+
+        const code =
+            $('fCode').value.trim();
+
+        const name =
+            $('fName').value.trim();
+
+        const description =
+            $('fDesc').value.trim();
+
+        if (!code || !name) {
+            $('fErr').textContent =
+                'Vui lòng nhập mã khoa và tên khoa';
+
+            return;
+        }
 
         const body = {
-            code: $('fCode').value.trim(),
-            name: $('fName').value.trim(),
-            description: $('fDesc').value.trim()
+            code,
+            name,
+            description
         };
 
+        const isEdit = editingId !== null;
+
+        const url = isEdit
+            ? BASE + '/' + encodeURIComponent(editingId)
+            : BASE;
+
+        $('saveBtn').disabled = true;
+        $('fErr').textContent = '';
+
         try {
-            const res = await fetch(
-                editingId ? BASE + '/' + editingId : BASE,
+            const response = await authorizedFetch(
+                url,
                 {
-                    method: editingId ? 'PUT' : 'POST',
+                    method: isEdit
+                        ? 'PUT'
+                        : 'POST',
+
                     headers: {
                         'Content-Type': 'application/json'
                     },
+
                     body: JSON.stringify(body)
                 }
             );
 
-            if (!res.ok) {
-                $('fErr').textContent = await errorText(res);
+            if (!response.ok) {
+                $('fErr').textContent =
+                    await errorText(response);
+
                 return;
             }
 
             $('dlg').close();
-            load();
-        } catch (err) {
-            $('fErr').textContent = 'Không kết nối được máy chủ';
+
+            const loaded = await load();
+
+            if (loaded) {
+                showNotice(
+                    isEdit
+                        ? 'Cập nhật khoa thành công'
+                        : 'Thêm khoa thành công'
+                );
+            }
+
+        } catch (error) {
+            $('fErr').textContent =
+                'Không thể lưu thông tin khoa: ' +
+                error.message;
+
+        } finally {
+            $('saveBtn').disabled = false;
         }
     };
 
-    async function remove(department) {
-        if (!confirm('Xóa khoa "' + department.name + '"?')) {
+    // ==========================================
+    // 12. XÓA KHOA KÈM JWT
+    // ==========================================
+
+    async function removeDepartment(department) {
+        const confirmed = confirm(
+            'Bạn có chắc chắn muốn xóa khoa "' +
+            department.name +
+            '" không?'
+        );
+
+        if (!confirmed) {
             return;
         }
 
         try {
-            const res = await fetch(
-                BASE + '/' + department.id,
-                { method: 'DELETE' }
+            const response = await authorizedFetch(
+                BASE + '/' +
+                encodeURIComponent(department.id),
+                {
+                    method: 'DELETE'
+                }
             );
 
-            if (!res.ok) {
-                alert(await errorText(res));
+            if (!response.ok) {
+                showNotice(
+                    await errorText(response),
+                    true
+                );
+
                 return;
             }
 
-            load();
-        } catch (err) {
-            alert('Không kết nối được máy chủ');
+            const loaded = await load();
+
+            if (loaded) {
+                showNotice(
+                    'Xóa khoa thành công'
+                );
+            }
+
+        } catch (error) {
+            showNotice(
+                'Không thể xóa khoa: ' +
+                error.message,
+                true
+            );
         }
     }
 
-    load();
+    // ==========================================
+    // 13. KHỞI TẠO
+    // ==========================================
+
+    if (getAccessToken()) {
+        load();
+    }
 </script>
 
 </body>
