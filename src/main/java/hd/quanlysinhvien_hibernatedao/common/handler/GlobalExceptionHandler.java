@@ -1,5 +1,11 @@
+package hd.quanlysinhvien_hibernatedao.common.handler;
 
-package hd.quanlysinhvien_hibernatedao.common.exception;
+import hd.quanlysinhvien_hibernatedao.common.exception.BadRequestException;
+import hd.quanlysinhvien_hibernatedao.common.exception.DuplicateResourceException;
+import hd.quanlysinhvien_hibernatedao.common.exception.FileExtensionNotSupportedException;
+import hd.quanlysinhvien_hibernatedao.common.exception.ResourceNotFoundException;
+import hd.quanlysinhvien_hibernatedao.common.exception.StorageException;
+import hd.quanlysinhvien_hibernatedao.wrapper.ApiError;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -16,15 +22,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleNotFound(
+    public ResponseEntity<ApiError> handleNotFound(
             ResourceNotFoundException ex,
             HttpServletRequest request
     ) {
@@ -36,7 +38,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<Map<String, Object>> handleDuplicate(
+    public ResponseEntity<ApiError> handleDuplicate(
             DuplicateResourceException ex,
             HttpServletRequest request
     ) {
@@ -48,7 +50,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<Map<String, Object>> handleBadRequest(
+    public ResponseEntity<ApiError> handleBadRequest(
             BadRequestException ex,
             HttpServletRequest request
     ) {
@@ -60,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(FileExtensionNotSupportedException.class)
-    public ResponseEntity<Map<String, Object>> handleUnsupportedFile(
+    public ResponseEntity<ApiError> handleUnsupportedFile(
             FileExtensionNotSupportedException ex,
             HttpServletRequest request
     ) {
@@ -72,7 +74,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(StorageException.class)
-    public ResponseEntity<Map<String, Object>> handleStorage(
+    public ResponseEntity<ApiError> handleStorage(
             StorageException ex,
             HttpServletRequest request
     ) {
@@ -84,7 +86,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+    public ResponseEntity<ApiError> handleAccessDenied(
             AccessDeniedException ex,
             HttpServletRequest request
     ) {
@@ -96,7 +98,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleResponseStatus(
+    public ResponseEntity<ApiError> handleResponseStatus(
             ResponseStatusException ex,
             HttpServletRequest request
     ) {
@@ -118,7 +120,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(
+    public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
@@ -139,7 +141,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> handleInvalidJson(
+    public ResponseEntity<ApiError> handleInvalidJson(
             HttpMessageNotReadableException ex,
             HttpServletRequest request
     ) {
@@ -151,7 +153,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+    public ResponseEntity<ApiError> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex,
             HttpServletRequest request
     ) {
@@ -163,7 +165,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingParameter(
+    public ResponseEntity<ApiError> handleMissingParameter(
             MissingServletRequestParameterException ex,
             HttpServletRequest request
     ) {
@@ -175,7 +177,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingPart(
+    public ResponseEntity<ApiError> handleMissingPart(
             MissingServletRequestPartException ex,
             HttpServletRequest request
     ) {
@@ -187,7 +189,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(
+    public ResponseEntity<ApiError> handleIllegalArgument(
             IllegalArgumentException ex,
             HttpServletRequest request
     ) {
@@ -199,7 +201,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleDataIntegrity(
+    public ResponseEntity<ApiError> handleDataIntegrity(
             DataIntegrityViolationException ex,
             HttpServletRequest request
     ) {
@@ -211,7 +213,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGeneral(
+    public ResponseEntity<ApiError> handleGeneral(
             Exception ex,
             HttpServletRequest request
     ) {
@@ -222,19 +224,21 @@ public class GlobalExceptionHandler {
         );
     }
 
-    private ResponseEntity<Map<String, Object>> buildResponse(
+    private ResponseEntity<ApiError> buildResponse(
             HttpStatus status,
             String message,
             HttpServletRequest request
     ) {
-        Map<String, Object> body = new LinkedHashMap<>();
+        ApiError body = ApiError.of(
+                status.value(),
+                status.getReasonPhrase(),
+                message,
+                request.getRequestURI(),
+                status.name()
+        );
 
-        body.put("timestamp", LocalDateTime.now().toString());
-        body.put("status", status.value());
-        body.put("error", status.getReasonPhrase());
-        body.put("message", message);
-        body.put("path", request.getRequestURI());
-
-        return ResponseEntity.status(status).body(body);
+        return ResponseEntity
+                .status(status)
+                .body(body);
     }
 }

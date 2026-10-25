@@ -17,6 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Quản lý lớp học",
+        description = "Các API quản lý thông tin lớp học"
+)
 
 @RestController
 @RequestMapping("/api/classes")

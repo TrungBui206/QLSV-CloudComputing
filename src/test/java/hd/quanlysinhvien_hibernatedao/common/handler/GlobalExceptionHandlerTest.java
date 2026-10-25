@@ -1,6 +1,7 @@
 
-package hd.quanlysinhvien_hibernatedao.common.exception;
+package hd.quanlysinhvien_hibernatedao.common.handler;
 
+import hd.quanlysinhvien_hibernatedao.common.exception.*;
 import hd.quanlysinhvien_hibernatedao.dto.request.DepartmentRequest;
 
 import jakarta.validation.Valid;

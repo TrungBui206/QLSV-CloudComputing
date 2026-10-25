@@ -14,6 +14,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Quản lý niên khóa",
+        description = "Các API quản lý thông tin niên khóa"
+)
+
 @RestController
 @RequestMapping("/api/academic-years")
 public class AcademicYearRestImpl implements AcademicYearRest {

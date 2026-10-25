@@ -19,6 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Xác thực và tài khoản",
+        description = "Các API đăng ký, đăng nhập và xác thực người dùng"
+)
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthRestImpl implements AuthRest {

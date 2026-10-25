@@ -21,6 +21,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Quản lý tài liệu",
+        description = "Các API quản lý tài liệu, tải lên và tải xuống"
+)
 
 @RestController
 @RequestMapping("/api/documents")

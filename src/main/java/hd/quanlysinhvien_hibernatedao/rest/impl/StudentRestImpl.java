@@ -16,6 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(
+        name = "Quản lý sinh viên",
+        description = "Các API quản lý thông tin sinh viên"
+)
+
 @RestController
 @RequestMapping("/api/students")
 public class StudentRestImpl implements StudentRest {
