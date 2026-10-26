@@ -1,15 +1,10 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
-import hd.quanlysinhvien_hibernatedao.common.exception.BadRequestException;
 import hd.quanlysinhvien_hibernatedao.common.exception.DuplicateResourceException;
 import hd.quanlysinhvien_hibernatedao.dto.request.LoginRequest;
 import hd.quanlysinhvien_hibernatedao.dto.request.RegisterRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.AuthResponse;
 import hd.quanlysinhvien_hibernatedao.service.AuthService;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.Filter;
 
@@ -21,6 +16,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -32,6 +28,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -163,7 +160,10 @@ class AuthRestImplTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(REGISTER_REQUEST)
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Đăng ký tài khoản thành công"));
 
         verify(authService).register(registerRequest());
     }
@@ -179,7 +179,10 @@ class AuthRestImplTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(REGISTER_REQUEST)
                 )
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Đăng ký tài khoản thành công"));
 
         verify(authService).register(registerRequest());
     }
@@ -456,11 +459,14 @@ class AuthRestImplTest {
                                 .content(LOGIN_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Đăng nhập thành công"))
+                .andExpect(jsonPath("$.data.accessToken")
                         .value("header.payload.signature"))
-                .andExpect(jsonPath("$.tokenType")
+                .andExpect(jsonPath("$.data.tokenType")
                         .value("Bearer"))
-                .andExpect(jsonPath("$.expiresIn")
+                .andExpect(jsonPath("$.data.expiresIn")
                         .value(3600));
 
         verify(authService).login(loginRequest());
@@ -563,7 +569,6 @@ class AuthRestImplTest {
         verify(authService, never()).login(any());
     }
 
-
     @Test
     void login_invalidCredentials_401() throws Exception {
         when(authService.login(loginRequest()))
@@ -587,7 +592,6 @@ class AuthRestImplTest {
         verify(authService).login(loginRequest());
     }
 
-
     @ParameterizedTest
     @ValueSource(strings = {"ADMIN", "LECTURER", "STUDENT"})
     void getCurrentUser_authenticated_success(String role) throws Exception {
@@ -598,7 +602,10 @@ class AuthRestImplTest {
                                         token("student01", role)
                                 )
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Lấy thông tin người dùng thành công"));
 
         verify(authService).getCurrentUser("student01");
     }
@@ -612,7 +619,10 @@ class AuthRestImplTest {
                                         token("lecturer01", "LECTURER")
                                 )
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Lấy thông tin người dùng thành công"));
 
         verify(authService).getCurrentUser("lecturer01");
     }

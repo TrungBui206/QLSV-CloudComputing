@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.exception.DuplicateResourceException;
@@ -30,7 +29,6 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.Instant;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -43,7 +41,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -139,12 +136,13 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"))
-                .andExpect(jsonPath("$[0].name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"))
+                .andExpect(jsonPath("$.data[0].name")
                         .value("Computer Science 01"))
-                .andExpect(jsonPath("$[0].domain")
+                .andExpect(jsonPath("$.data[0].domain")
                         .value("Computer Science"))
-                .andExpect(jsonPath("$[0].description")
+                .andExpect(jsonPath("$.data[0].description")
                         .value("Class information"));
 
         verify(classInfoService).getAll();
@@ -160,7 +158,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"));
 
         verify(classInfoService).getAll();
     }
@@ -175,7 +174,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"));
 
         verify(classInfoService).getAll();
     }
@@ -190,7 +190,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -211,10 +212,11 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Computer Science 01"))
-                .andExpect(jsonPath("$.domain")
+                .andExpect(jsonPath("$.data.domain")
                         .value("Computer Science"));
 
         verify(classInfoService).getById("CSE01");
@@ -230,7 +232,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"));
     }
 
     @Test
@@ -243,7 +246,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"));
 
         verify(classInfoService).getById("CSE01");
     }
@@ -288,8 +292,9 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Computer Science 01"));
 
         verify(classInfoService)
@@ -323,8 +328,9 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"))
-                .andExpect(jsonPath("$[0].domain")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"))
+                .andExpect(jsonPath("$.data[0].domain")
                         .value("Computer Science"));
 
         verify(classInfoService)
@@ -341,7 +347,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -364,8 +371,9 @@ class ClassInfoRestImplTest {
                                 .param("orderType", "asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"))
-                .andExpect(jsonPath("$[0].name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"))
+                .andExpect(jsonPath("$.data[0].name")
                         .value("Computer Science 01"));
 
         verify(classInfoService).search(
@@ -392,7 +400,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value("CSE01"));
 
         verify(classInfoService).search(
                 null,
@@ -423,7 +432,8 @@ class ClassInfoRestImplTest {
                                 .param("orderType", "asc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -456,7 +466,8 @@ class ClassInfoRestImplTest {
                                 .param("query", "computer")
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("5"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data").value(5));
 
         verify(classInfoService).getCount("computer");
     }
@@ -471,7 +482,8 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("2"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data").value(2));
 
         verify(classInfoService).getCount(null);
     }
@@ -516,10 +528,11 @@ class ClassInfoRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("CSE01"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Computer Science 01"))
-                .andExpect(jsonPath("$.domain")
+                .andExpect(jsonPath("$.data.domain")
                         .value("Computer Science"));
 
         verify(classInfoService).create(classInfoRequest());
@@ -537,7 +550,8 @@ class ClassInfoRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"));
 
         verify(classInfoService).create(classInfoRequest());
     }
@@ -625,10 +639,11 @@ class ClassInfoRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Updated Class"))
-                .andExpect(jsonPath("$.description")
+                .andExpect(jsonPath("$.data.description")
                         .value("Updated description"));
 
         verify(classInfoService).update(classInfoRequest());
@@ -646,7 +661,8 @@ class ClassInfoRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"));
 
         verify(classInfoService).update(classInfoRequest());
     }
@@ -718,7 +734,8 @@ class ClassInfoRestImplTest {
                                 .content(body)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("CSE01"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value("CSE01"));
 
         verify(classInfoService).update(classInfoRequest());
     }
@@ -781,9 +798,9 @@ class ClassInfoRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        "Class Info deleted successfully"
-                ));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message")
+                        .value("Xóa lớp học thành công"));
 
         verify(classInfoService).delete("CSE01");
     }

@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.exception.DuplicateResourceException;
@@ -155,16 +154,17 @@ class AcademicYearRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].code").value("AY2026"))
-                .andExpect(jsonPath("$.content[0].name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].code").value("AY2026"))
+                .andExpect(jsonPath("$.data.content[0].name")
                         .value("Academic Year 2026-2027"))
-                .andExpect(jsonPath("$.content[0].startYear").value(2026))
-                .andExpect(jsonPath("$.content[0].endYear").value(2027))
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(10))
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.totalPages").value(1));
+                .andExpect(jsonPath("$.data.content[0].startYear").value(2026))
+                .andExpect(jsonPath("$.data.content[0].endYear").value(2027))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1));
 
         verify(academicYearService).search(
                 "", 0, 10, "id", "asc"
@@ -196,11 +196,12 @@ class AcademicYearRestImplTest {
                                 .param("direction", "desc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].code").value("AY2026"))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(5))
-                .andExpect(jsonPath("$.totalElements").value(6))
-                .andExpect(jsonPath("$.totalPages").value(2));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content[0].code").value("AY2026"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(5))
+                .andExpect(jsonPath("$.data.totalElements").value(6))
+                .andExpect(jsonPath("$.data.totalPages").value(2));
 
         verify(academicYearService).search(
                 "2026", 1, 5, "startYear", "desc"
@@ -227,8 +228,9 @@ class AcademicYearRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].code").value("AY2026"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].code").value("AY2026"));
 
         verify(academicYearService).search(
                 "", 0, 10, "id", "asc"
@@ -256,9 +258,10 @@ class AcademicYearRestImplTest {
                                 .param("keyword", "unknown")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(0))
-                .andExpect(jsonPath("$.totalElements").value(0))
-                .andExpect(jsonPath("$.totalPages").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content.length()").value(0))
+                .andExpect(jsonPath("$.data.totalElements").value(0))
+                .andExpect(jsonPath("$.data.totalPages").value(0));
     }
 
     @Test
@@ -298,14 +301,15 @@ class AcademicYearRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("AY2026"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("AY2026"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Academic Year 2026-2027"))
-                .andExpect(jsonPath("$.description")
+                .andExpect(jsonPath("$.data.description")
                         .value("Academic year description"))
-                .andExpect(jsonPath("$.startYear").value(2026))
-                .andExpect(jsonPath("$.endYear").value(2027));
+                .andExpect(jsonPath("$.data.startYear").value(2026))
+                .andExpect(jsonPath("$.data.endYear").value(2027));
 
         verify(academicYearService).findById(1L);
     }
@@ -320,8 +324,9 @@ class AcademicYearRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("AY2026"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("AY2026"));
 
         verify(academicYearService).findById(1L);
     }
@@ -336,7 +341,8 @@ class AcademicYearRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1));
 
         verify(academicYearService).findById(1L);
     }
@@ -396,12 +402,13 @@ class AcademicYearRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("AY2026"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("AY2026"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Academic Year 2026-2027"))
-                .andExpect(jsonPath("$.startYear").value(2026))
-                .andExpect(jsonPath("$.endYear").value(2027));
+                .andExpect(jsonPath("$.data.startYear").value(2026))
+                .andExpect(jsonPath("$.data.endYear").value(2027));
 
         verify(academicYearService).create(academicYearRequest());
     }
@@ -630,12 +637,13 @@ class AcademicYearRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("AY2026"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("AY2026"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Updated Academic Year"))
-                .andExpect(jsonPath("$.startYear").value(2026))
-                .andExpect(jsonPath("$.endYear").value(2028));
+                .andExpect(jsonPath("$.data.startYear").value(2026))
+                .andExpect(jsonPath("$.data.endYear").value(2028));
 
         verify(academicYearService).update(
                 1L,

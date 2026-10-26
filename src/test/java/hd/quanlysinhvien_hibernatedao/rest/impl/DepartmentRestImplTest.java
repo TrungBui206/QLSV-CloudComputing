@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.exception.DuplicateResourceException;
@@ -129,9 +128,10 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].code").value("CSE"))
-                .andExpect(jsonPath("$[0].name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].code").value("CSE"))
+                .andExpect(jsonPath("$.data[0].name")
                         .value("Computer Science"));
 
         verify(departmentService).findAll();
@@ -147,7 +147,8 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].code").value("CSE"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].code").value("CSE"));
 
         verify(departmentService).findAll();
     }
@@ -162,7 +163,8 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].code").value("CSE"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].code").value("CSE"));
 
         verify(departmentService).findAll();
     }
@@ -185,7 +187,8 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -208,12 +211,13 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].code").value("CSE"))
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(10))
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.totalPages").value(1));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].code").value("CSE"))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1));
 
         verify(departmentService).search(
                 "", 0, 10, "id", "asc"
@@ -245,11 +249,12 @@ class DepartmentRestImplTest {
                                 .param("direction", "desc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].code").value("CSE"))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(5))
-                .andExpect(jsonPath("$.totalElements").value(6))
-                .andExpect(jsonPath("$.totalPages").value(2));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.content[0].code").value("CSE"))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(5))
+                .andExpect(jsonPath("$.data.totalElements").value(6))
+                .andExpect(jsonPath("$.data.totalPages").value(2));
 
         verify(departmentService).search(
                 "computer", 1, 5, "name", "desc"
@@ -272,9 +277,10 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("CSE"))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("CSE"))
+                .andExpect(jsonPath("$.data.name")
                         .value("Computer Science"));
 
         verify(departmentService).findById(1L);
@@ -290,7 +296,8 @@ class DepartmentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1));
     }
 
     @Test
@@ -334,8 +341,10 @@ class DepartmentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.code").value("CSE"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Thêm khoa thành công"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.code").value("CSE"));
 
         verify(departmentService).create(
                 new DepartmentRequest(
@@ -498,8 +507,9 @@ class DepartmentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name")
                         .value("Updated Department"));
 
         verify(departmentService).update(

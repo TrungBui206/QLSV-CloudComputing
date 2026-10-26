@@ -1,5 +1,6 @@
-
 package hd.quanlysinhvien_hibernatedao.config;
+
+import hd.quanlysinhvien_hibernatedao.security.handler.SecurityExceptionHandler;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
 import java.util.Base64;
 
 @Configuration
@@ -30,7 +32,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
-            JwtAuthenticationConverter jwtConverter
+            JwtAuthenticationConverter jwtConverter,
+            SecurityExceptionHandler securityExceptionHandler
     ) throws Exception {
 
         http
@@ -67,8 +70,22 @@ public class SecurityConfig {
 
                         .anyRequest().permitAll()
                 )
-                .oauth2ResourceServer(oauth ->
-                        oauth.jwt(jwt ->
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(
+                                securityExceptionHandler
+                        )
+                        .accessDeniedHandler(
+                                securityExceptionHandler
+                        )
+                )
+                .oauth2ResourceServer(oauth -> oauth
+                        .authenticationEntryPoint(
+                                securityExceptionHandler
+                        )
+                        .accessDeniedHandler(
+                                securityExceptionHandler
+                        )
+                        .jwt(jwt ->
                                 jwt.jwtAuthenticationConverter(
                                         jwtConverter
                                 )

@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.request.DepartmentRequest;
@@ -7,6 +6,7 @@ import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.rest.DepartmentRest;
 import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 import hd.quanlysinhvien_hibernatedao.service.DepartmentService;
+import hd.quanlysinhvien_hibernatedao.wrapper.ApiResponse;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,17 +34,17 @@ public class DepartmentRestImpl implements DepartmentRest {
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<DepartmentResponse>> getAll() {
+    public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getAll() {
 
         List<DepartmentResponse> departments =
                 departmentService.findAll();
 
-        return ResponseEntity.ok(departments);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách khoa thành công", departments));
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<PageResponse<DepartmentResponse>> search(
+    public ResponseEntity<ApiResponse<PageResponse<DepartmentResponse>>> search(
             String keyword,
             int page,
             int size,
@@ -61,22 +61,22 @@ public class DepartmentRestImpl implements DepartmentRest {
                         direction
                 );
 
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(ApiResponse.success("Tìm kiếm khoa thành công", result));
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<DepartmentResponse> getById(Long id) {
+    public ResponseEntity<ApiResponse<DepartmentResponse>> getById(Long id) {
 
         DepartmentResponse department =
                 departmentService.findById(id);
 
-        return ResponseEntity.ok(department);
+        return ResponseEntity.ok(ApiResponse.success("Lấy thông tin khoa thành công", department));
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
-    public ResponseEntity<DepartmentResponse> create(
+    public ResponseEntity<ApiResponse<DepartmentResponse>> create(
             DepartmentRequest request
     ) {
 
@@ -85,12 +85,12 @@ public class DepartmentRestImpl implements DepartmentRest {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(department);
+                .body(ApiResponse.success("Thêm khoa thành công", department));
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
-    public ResponseEntity<DepartmentResponse> update(
+    public ResponseEntity<ApiResponse<DepartmentResponse>> update(
             Long id,
             DepartmentRequest request
     ) {
@@ -98,7 +98,7 @@ public class DepartmentRestImpl implements DepartmentRest {
         DepartmentResponse department =
                 departmentService.update(id, request);
 
-        return ResponseEntity.ok(department);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật khoa thành công", department));
     }
 
     @Override

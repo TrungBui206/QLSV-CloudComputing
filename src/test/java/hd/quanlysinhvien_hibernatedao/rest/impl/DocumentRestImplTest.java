@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.exception.FileExtensionNotSupportedException;
@@ -143,7 +142,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token(role))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).listAll();
         verify(documentService, never()).listByApp(any());
@@ -159,7 +159,8 @@ class DocumentRestImplTest {
                                 .param("appId", "   ")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).listAll();
     }
@@ -175,7 +176,8 @@ class DocumentRestImplTest {
                                 .param("appId", "APP01")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).listByApp("APP01");
         verify(documentService, never()).listAll();
@@ -200,7 +202,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).getDoc(
                 null, 0, 10, "creationTime", "desc", null
@@ -229,7 +232,8 @@ class DocumentRestImplTest {
                                 .param("appId", "APP01")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).getDoc(
                 "report", 5, 15, "name", "asc", "APP01"
@@ -246,7 +250,9 @@ class DocumentRestImplTest {
                         get(URL + "/search")
                                 .header("Authorization", token("STUDENT"))
                 )
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).getDoc(
                 null, 0, 10, "creationTime", "desc", null
@@ -284,7 +290,8 @@ class DocumentRestImplTest {
                                 .param("appId", "APP01")
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("5"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data").value(5));
 
         verify(documentService).getDocCount("report", "APP01");
     }
@@ -299,7 +306,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().string("0"));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data").value(0));
 
         verify(documentService).getDocCount(null, null);
     }
@@ -320,7 +328,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).listByApp("APP01");
     }
@@ -346,7 +355,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.path")
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.path")
                         .value("APP01/report.pdf"));
 
         verify(documentService).getById("doc-1");
@@ -393,7 +403,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).create(
                 org.mockito.ArgumentMatchers.argThat(
@@ -419,7 +430,8 @@ class DocumentRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.length()").value(0));
 
         verify(documentService).create(
                 org.mockito.ArgumentMatchers.argThat(

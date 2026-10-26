@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -194,31 +193,32 @@
 
         <label for="password">
             Mật khẩu
-
-            <div class="password-box">
-
-                <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        placeholder="Nhập mật khẩu"
-                        autocomplete="current-password"
-                        required>
-
-                <button
-                        type="button"
-                        class="toggle-password"
-                        id="togglePassword">
-                    Hiện
-                </button>
-
-            </div>
         </label>
+
+        <div class="password-box">
+
+            <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Nhập mật khẩu"
+                    autocomplete="current-password"
+                    required>
+
+            <button
+                    type="button"
+                    class="toggle-password"
+                    id="togglePassword">
+                Hiện
+            </button>
+
+        </div>
 
         <button
                 type="submit"
                 class="login-btn"
-                id="loginBtn">
+                id="loginBtn"
+                style="margin-top: 18px">
             Đăng nhập
         </button>
 
@@ -231,10 +231,6 @@
 </div>
 
 <script>
-    // ========================================
-    // 1. CONFIGURATION
-    // ========================================
-
     const LOGIN_API = '/api/auth/login';
 
     const AUTH_KEYS = {
@@ -244,10 +240,6 @@
     };
 
     const $ = id => document.getElementById(id);
-
-    // ========================================
-    // 2. MESSAGE
-    // ========================================
 
     function showMessage(text, type = 'error') {
         const message = $('message');
@@ -261,10 +253,6 @@
         $('message').className = 'message';
     }
 
-    // ========================================
-    // 3. PASSWORD VISIBILITY
-    // ========================================
-
     $('togglePassword').addEventListener('click', () => {
         const input = $('password');
 
@@ -276,19 +264,11 @@
             isHidden ? 'Ẩn' : 'Hiện';
     });
 
-    // ========================================
-    // 4. CLEAR OLD AUTH DATA
-    // ========================================
-
     function clearAuth() {
         sessionStorage.removeItem(AUTH_KEYS.token);
         sessionStorage.removeItem(AUTH_KEYS.type);
         sessionStorage.removeItem(AUTH_KEYS.expiresAt);
     }
-
-    // ========================================
-    // 5. SAFE REDIRECT
-    // ========================================
 
     function getRedirectPage() {
         const params = new URLSearchParams(
@@ -310,22 +290,14 @@
             : 'classes.html';
     }
 
-    // ========================================
-    // 6. LOGIN
-    // ========================================
-
     $('loginForm').addEventListener(
         'submit',
         async event => {
-
             event.preventDefault();
             clearMessage();
 
-            const username =
-                $('username').value.trim();
-
-            const password =
-                $('password').value;
+            const username = $('username').value.trim();
+            const password = $('password').value;
 
             if (!username || !password.trim()) {
                 showMessage(
@@ -342,11 +314,9 @@
             try {
                 const response = await fetch(LOGIN_API, {
                     method: 'POST',
-
                     headers: {
                         'Content-Type': 'application/json'
                     },
-
                     body: JSON.stringify({
                         username: username,
                         password: password
@@ -354,8 +324,10 @@
                 });
 
                 if (!response.ok) {
-                    if (response.status === 400 ||
-                        response.status === 401) {
+                    if (
+                        response.status === 400 ||
+                        response.status === 401
+                    ) {
                         throw new Error(
                             'Tên đăng nhập hoặc mật khẩu không đúng'
                         );
@@ -373,10 +345,24 @@
                     );
                 }
 
-                const data = await response.json();
+                const payload = await response.json();
 
-                if (!data.accessToken ||
-                    typeof data.accessToken !== 'string') {
+                if (
+                    !payload ||
+                    payload.code !== 'SUCCESS' ||
+                    !payload.data
+                ) {
+                    throw new Error(
+                        'Phản hồi đăng nhập từ máy chủ không hợp lệ'
+                    );
+                }
+
+                const data = payload.data;
+
+                if (
+                    !data.accessToken ||
+                    typeof data.accessToken !== 'string'
+                ) {
                     throw new Error(
                         'Máy chủ không trả về Access Token hợp lệ'
                     );
@@ -392,17 +378,17 @@
 
                 const expiresIn = Number(data.expiresIn);
 
-                if (!Number.isFinite(expiresIn) ||
-                    expiresIn <= 0) {
+                if (
+                    !Number.isFinite(expiresIn) ||
+                    expiresIn <= 0
+                ) {
                     throw new Error(
                         'Thời hạn token không hợp lệ'
                     );
                 }
 
-                // Xoa thong tin dang nhap truoc do.
                 clearAuth();
 
-                // Luu JWT tam thoi cho tab hien tai.
                 sessionStorage.setItem(
                     AUTH_KEYS.token,
                     data.accessToken
@@ -423,7 +409,6 @@
                     'success'
                 );
 
-                // Chuyen sang trang quan ly.
                 window.location.replace(
                     getRedirectPage()
                 );

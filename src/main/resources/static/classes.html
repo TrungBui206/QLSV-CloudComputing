@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -429,10 +428,6 @@
 <script src="menu.js"></script>
 
 <script>
-    // ==========================================
-    // 1. CẤU HÌNH API
-    // ==========================================
-
     const BASE = '/api/classes';
 
     const API = {
@@ -463,10 +458,6 @@
     let editingId = null;
 
     const $ = id => document.getElementById(id);
-
-    // ==========================================
-    // 2. XÁC THỰC JWT
-    // ==========================================
 
     function clearAuth() {
         sessionStorage.removeItem(AUTH_KEYS.token);
@@ -540,10 +531,6 @@
         return response;
     }
 
-    // ==========================================
-    // 3. CÁC HÀM HỖ TRỢ
-    // ==========================================
-
     function el(tag, text, className) {
         const element = document.createElement(tag);
 
@@ -592,10 +579,6 @@
             .toLocaleLowerCase('vi');
     }
 
-    // ==========================================
-    // 4. HIỂN THỊ LĨNH VỰC BẰNG TIẾNG VIỆT
-    // ==========================================
-
     const DOMAIN_TRANSLATIONS = {
         'computer science': 'Khoa học máy tính',
         'information technology': 'Công nghệ thông tin',
@@ -621,10 +604,6 @@
             ] || original;
     }
 
-    // ==========================================
-    // 5. THÔNG BÁO LỖI API
-    // ==========================================
-
     async function errorText(response) {
         if (response.status === 400) {
             return 'Thông tin lớp học không hợp lệ';
@@ -649,15 +628,10 @@
                 return body.message;
             }
         } catch (error) {
-            // Phản hồi không chứa JSON hợp lệ.
         }
 
         return 'Máy chủ trả về mã lỗi ' + response.status;
     }
-
-    // ==========================================
-    // 6. TẢI DANH SÁCH LỚP
-    // ==========================================
 
     async function load() {
         hideNotice();
@@ -677,7 +651,8 @@
                 );
             }
 
-            const data = await response.json();
+            const payload = await response.json();
+            const data = payload.data;
 
             if (!Array.isArray(data)) {
                 throw new Error(
@@ -710,10 +685,6 @@
         }
     }
 
-    // ==========================================
-    // 7. TÌM KIẾM VÀ SẮP XẾP
-    // ==========================================
-
     function getFilteredItems() {
         const keyword = normalize(state.keyword);
 
@@ -733,8 +704,6 @@
             );
         });
 
-        // Khi chưa nhấn vào cột nào:
-        // Không sắp xếp và không hiện mũi tên.
         if (state.sortBy !== null) {
             items.sort((a, b) => {
                 const field = state.sortBy;
@@ -762,13 +731,8 @@
             });
         }
 
-        // Luôn trả về mảng, kể cả khi chưa sắp xếp.
         return items;
     }
-
-    // ==========================================
-    // 8. HIỂN THỊ MŨI TÊN SẮP XẾP
-    // ==========================================
 
     function updateClassSortMarks() {
         const labels = {
@@ -795,10 +759,6 @@
             th.textContent = labels[field] + mark;
         });
     }
-
-    // ==========================================
-    // 9. HIỂN THỊ BẢNG
-    // ==========================================
 
     function render() {
         const items = getFilteredItems();
@@ -910,10 +870,6 @@
         updateClassSortMarks();
     }
 
-    // ==========================================
-    // 10. PHÂN TRANG
-    // ==========================================
-
     function renderPager(totalPages) {
         const buttons = [];
 
@@ -970,10 +926,6 @@
         $('pager').replaceChildren(...buttons);
     }
 
-    // ==========================================
-    // 11. TÌM KIẾM
-    // ==========================================
-
     function doSearch() {
         state.keyword =
             $('keyword').value.trim();
@@ -992,26 +944,16 @@
         }
     };
 
-    // ==========================================
-    // 12. LÀM MỚI
-    // ==========================================
-
     $('resetBtn').onclick = () => {
         $('keyword').value = '';
 
         state.keyword = '';
         state.page = 0;
-
-        // Không chọn sẵn cột sắp xếp.
         state.sortBy = null;
         state.direction = 'asc';
 
         load();
     };
-
-    // ==========================================
-    // 13. SẮP XẾP THEO CỘT
-    // ==========================================
 
     document.querySelectorAll(
         'th.sortable'
@@ -1034,10 +976,6 @@
             render();
         };
     });
-
-    // ==========================================
-    // 14. MỞ FORM THÊM VÀ SỬA
-    // ==========================================
 
     function openForm(item) {
         editingId = item ? item.id : null;
@@ -1072,10 +1010,6 @@
 
     $('cancelBtn').onclick = () =>
         $('dlg').close();
-
-    // ==========================================
-    // 15. LƯU LỚP HỌC
-    // ==========================================
 
     $('frm').onsubmit = async event => {
         event.preventDefault();
@@ -1151,10 +1085,6 @@
         }
     };
 
-    // ==========================================
-    // 16. XÓA LỚP HỌC
-    // ==========================================
-
     async function removeClass(item) {
         const confirmed = confirm(
             'Bạn có chắc chắn muốn xóa lớp "' +
@@ -1200,14 +1130,9 @@
         }
     }
 
-    // ==========================================
-    // 17. KHỞI TẠO
-    // ==========================================
-
     if (getAccessToken()) {
         load();
     }
-
 </script>
 
 </body>

@@ -1,10 +1,10 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.response.DocumentResponse;
 import hd.quanlysinhvien_hibernatedao.rest.DocumentRest;
 import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
 import hd.quanlysinhvien_hibernatedao.service.DocumentService;
+import hd.quanlysinhvien_hibernatedao.wrapper.ApiResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +21,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(
         name = "Quản lý tài liệu",
         description = "Các API quản lý tài liệu, tải lên và tải xuống"
 )
-
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentRestImpl implements DocumentRest {
@@ -43,7 +43,7 @@ public class DocumentRestImpl implements DocumentRest {
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
-    public ResponseEntity<List<DocumentResponse>> create(
+    public ResponseEntity<ApiResponse<List<DocumentResponse>>> create(
             List<MultipartFile> files,
             String appId
     ) {
@@ -60,7 +60,12 @@ public class DocumentRestImpl implements DocumentRest {
 
             return ResponseEntity
                     .status(HttpStatus.CREATED)
-                    .body(result);
+                    .body(
+                            ApiResponse.success(
+                                    "Tải tài liệu lên thành công",
+                                    result
+                            )
+                    );
 
         } catch (RuntimeException e) {
             logger.error("Error creating documents", e);
@@ -70,24 +75,36 @@ public class DocumentRestImpl implements DocumentRest {
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<DocumentResponse>> listByApp(
+    public ResponseEntity<ApiResponse<List<DocumentResponse>>> listByApp(
             String appId
     ) {
 
         if (appId == null || appId.isBlank()) {
+            List<DocumentResponse> result =
+                    documentService.listAll();
+
             return ResponseEntity.ok(
-                    documentService.listAll()
+                    ApiResponse.success(
+                            "Lấy danh sách tài liệu thành công",
+                            result
+                    )
             );
         }
 
+        List<DocumentResponse> result =
+                documentService.listByApp(appId);
+
         return ResponseEntity.ok(
-                documentService.listByApp(appId)
+                ApiResponse.success(
+                        "Lấy danh sách tài liệu theo ứng dụng thành công",
+                        result
+                )
         );
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<DocumentResponse>> search(
+    public ResponseEntity<ApiResponse<List<DocumentResponse>>> search(
             String query,
             Integer lowerLimit,
             Integer upperLimit,
@@ -96,7 +113,7 @@ public class DocumentRestImpl implements DocumentRest {
             String appId
     ) {
 
-        return ResponseEntity.ok(
+        List<DocumentResponse> result =
                 documentService.getDoc(
                         query,
                         lowerLimit,
@@ -104,30 +121,48 @@ public class DocumentRestImpl implements DocumentRest {
                         orderBy,
                         orderType,
                         appId
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Tìm kiếm tài liệu thành công",
+                        result
                 )
         );
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<Long> count(
+    public ResponseEntity<ApiResponse<Long>> count(
             String query,
             String appId
     ) {
 
+        Long result =
+                documentService.getDocCount(query, appId);
+
         return ResponseEntity.ok(
-                documentService.getDocCount(query, appId)
+                ApiResponse.success(
+                        "Đếm số tài liệu thành công",
+                        result
+                )
         );
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<DocumentResponse>> getByApp(
+    public ResponseEntity<ApiResponse<List<DocumentResponse>>> getByApp(
             String appId
     ) {
 
+        List<DocumentResponse> result =
+                documentService.listByApp(appId);
+
         return ResponseEntity.ok(
-                documentService.listByApp(appId)
+                ApiResponse.success(
+                        "Lấy danh sách tài liệu theo ứng dụng thành công",
+                        result
+                )
         );
     }
 
@@ -154,12 +189,18 @@ public class DocumentRestImpl implements DocumentRest {
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<DocumentResponse> getById(
+    public ResponseEntity<ApiResponse<DocumentResponse>> getById(
             String id
     ) {
 
+        DocumentResponse result =
+                documentService.getById(id);
+
         return ResponseEntity.ok(
-                documentService.getById(id)
+                ApiResponse.success(
+                        "Lấy thông tin tài liệu thành công",
+                        result
+                )
         );
     }
 

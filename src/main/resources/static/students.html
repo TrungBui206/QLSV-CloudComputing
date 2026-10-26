@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -9,10 +8,6 @@
     <title>Quản lý sinh viên</title>
 
     <style>
-        /* =====================================
-           1. GIAO DIỆN CHUNG
-        ===================================== */
-
         * {
             box-sizing: border-box;
         }
@@ -32,10 +27,6 @@
         textarea {
             font: inherit;
         }
-
-        /* =====================================
-           2. THANH MENU
-        ===================================== */
 
         aside {
             width: 230px;
@@ -70,10 +61,6 @@
             font-weight: 600;
         }
 
-        /* =====================================
-           3. NỘI DUNG CHÍNH
-        ===================================== */
-
         main {
             flex: 1;
             min-width: 0;
@@ -100,10 +87,6 @@
             padding: 16px;
             margin-bottom: 16px;
         }
-
-        /* =====================================
-           4. TÌM KIẾM
-        ===================================== */
 
         .bar {
             display: flex;
@@ -137,10 +120,6 @@
             border-color: #14397d;
         }
 
-        /* =====================================
-           5. NÚT BẤM
-        ===================================== */
-
         button {
             padding: 10px 16px;
             border: 1px solid #14397d;
@@ -167,10 +146,6 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
-
-        /* =====================================
-           6. BẢNG SINH VIÊN
-        ===================================== */
 
         .table-wrap {
             width: 100%;
@@ -218,10 +193,6 @@
             color: #6b7280;
         }
 
-        /* =====================================
-           7. PHÂN TRANG
-        ===================================== */
-
         .foot {
             display: flex;
             justify-content: space-between;
@@ -247,10 +218,6 @@
             color: #ffffff;
         }
 
-        /* =====================================
-           8. THÔNG BÁO
-        ===================================== */
-
         .notice {
             display: none;
             padding: 12px 16px;
@@ -265,10 +232,6 @@
             background: #fee2e2;
             color: #991b1b;
         }
-
-        /* =====================================
-           9. HỘP THOẠI THÊM / SỬA
-        ===================================== */
 
         dialog {
             width: min(440px, 95vw);
@@ -316,10 +279,6 @@
             gap: 8px;
         }
 
-        /* =====================================
-           10. RESPONSIVE
-        ===================================== */
-
         @media (max-width: 720px) {
             body {
                 flex-direction: column;
@@ -350,19 +309,11 @@
 
 <body>
 
-<!-- =====================================
-     THANH MENU
-===================================== -->
-
 <aside>
     <h1>QUẢN LÝ MÔN HỌC</h1>
     <small>HỆ THỐNG QUẢN TRỊ</small>
     <nav id="nav"></nav>
 </aside>
-
-<!-- =====================================
-     NỘI DUNG CHÍNH
-===================================== -->
 
 <main>
 
@@ -383,8 +334,6 @@
             role="status"
             aria-live="polite">
     </div>
-
-    <!-- THANH TÌM KIẾM -->
 
     <div class="card bar">
 
@@ -416,8 +365,6 @@
         </button>
 
     </div>
-
-    <!-- BẢNG SINH VIÊN -->
 
     <div class="card">
 
@@ -479,10 +426,6 @@
     </div>
 
 </main>
-
-<!-- =====================================
-     FORM THÊM / SỬA SINH VIÊN
-===================================== -->
 
 <dialog id="dlg">
 
@@ -554,18 +497,11 @@
 
 </dialog>
 
-<!-- MENU DÙNG CHUNG -->
-
 <script src="menu.js"></script>
 
 <script>
-    // ==========================================
-    // 1. CẤU HÌNH API
-    // ==========================================
-
     const BASE = '/api/students';
     const DEPTS = '/api/departments';
-
     const SIZE = 8;
 
     const AUTH_KEYS = {
@@ -591,10 +527,6 @@
     let editingId = null;
 
     const $ = id => document.getElementById(id);
-
-    // ==========================================
-    // 2. XÁC THỰC JWT
-    // ==========================================
 
     function clearAuth() {
         sessionStorage.removeItem(AUTH_KEYS.token);
@@ -668,10 +600,6 @@
         return response;
     }
 
-    // ==========================================
-    // 3. CÁC HÀM HỖ TRỢ
-    // ==========================================
-
     function el(tag, text, className) {
         const element = document.createElement(tag);
 
@@ -741,7 +669,6 @@
                 return data.message;
             }
         } catch (error) {
-            // Phản hồi không có JSON hợp lệ.
         }
 
         if (response.status === 400) {
@@ -750,10 +677,6 @@
 
         return 'Máy chủ trả về mã lỗi ' + response.status;
     }
-
-    // ==========================================
-    // 4. TẢI DANH SÁCH KHOA BẰNG JWT
-    // ==========================================
 
     async function loadDepartments() {
         try {
@@ -765,7 +688,8 @@
                 );
             }
 
-            const departments = await response.json();
+            const payload = await response.json();
+            const departments = payload.data;
 
             if (!Array.isArray(departments)) {
                 throw new Error(
@@ -806,10 +730,6 @@
         }
     }
 
-    // ==========================================
-    // 5. TẢI DANH SÁCH SINH VIÊN BẰNG JWT
-    // ==========================================
-
     async function load() {
         const params = new URLSearchParams({
             keyword: state.keyword,
@@ -841,7 +761,8 @@
                 );
             }
 
-            const data = await response.json();
+            const payload = await response.json();
+            const data = payload.data;
 
             if (
                 !data ||
@@ -887,10 +808,6 @@
             return false;
         }
     }
-
-    // ==========================================
-    // 6. HIỂN THỊ BẢNG SINH VIÊN
-    // ==========================================
 
     function render(data) {
         const rows = $('rows');
@@ -977,10 +894,6 @@
         renderSortMarks();
     }
 
-    // ==========================================
-    // 7. PHÂN TRANG
-    // ==========================================
-
     function renderPager(data) {
         const previous = el(
             'button',
@@ -1035,10 +948,6 @@
         );
     }
 
-    // ==========================================
-    // 8. HIỂN THỊ SẮP XẾP
-    // ==========================================
-
     function renderSortMarks() {
         document.querySelectorAll(
             'th.sortable'
@@ -1060,10 +969,6 @@
         });
     }
 
-    // ==========================================
-    // 9. SẮP XẾP THEO CỘT
-    // ==========================================
-
     document.querySelectorAll(
         'th.sortable'
     ).forEach(th => {
@@ -1084,10 +989,6 @@
             load();
         };
     });
-
-    // ==========================================
-    // 10. TÌM KIẾM VÀ LỌC KHOA
-    // ==========================================
 
     function doSearch() {
         state.keyword =
@@ -1126,10 +1027,6 @@
         hideNotice();
         load();
     };
-
-    // ==========================================
-    // 11. MỞ FORM THÊM VÀ SỬA
-    // ==========================================
 
     function openForm(student) {
         editingId = student
@@ -1170,10 +1067,6 @@
 
     $('cancelBtn').onclick = () =>
         $('dlg').close();
-
-    // ==========================================
-    // 12. THÊM VÀ SỬA SINH VIÊN
-    // ==========================================
 
     $('frm').onsubmit = async event => {
         event.preventDefault();
@@ -1254,10 +1147,6 @@
         }
     };
 
-    // ==========================================
-    // 13. XÓA SINH VIÊN
-    // ==========================================
-
     async function removeStudent(student) {
         const confirmed = confirm(
             'Bạn có chắc chắn muốn xóa sinh viên "' +
@@ -1303,10 +1192,6 @@
             );
         }
     }
-
-    // ==========================================
-    // 14. KHỞI TẠO
-    // ==========================================
 
     async function initialize() {
         if (!getAccessToken()) {

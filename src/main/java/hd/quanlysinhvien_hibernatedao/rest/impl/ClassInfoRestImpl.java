@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.request.ClassInfoRequest;
@@ -6,6 +5,7 @@ import hd.quanlysinhvien_hibernatedao.dto.response.ClassInfoResponse;
 import hd.quanlysinhvien_hibernatedao.rest.ClassInfoRest;
 import hd.quanlysinhvien_hibernatedao.service.ClassInfoService;
 import hd.quanlysinhvien_hibernatedao.security.authorization.AuthorizationPolicies;
+import hd.quanlysinhvien_hibernatedao.wrapper.ApiResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
         name = "Quản lý lớp học",
         description = "Các API quản lý thông tin lớp học"
 )
-
 @RestController
 @RequestMapping("/api/classes")
 public class ClassInfoRestImpl implements ClassInfoRest {
@@ -39,18 +38,27 @@ public class ClassInfoRestImpl implements ClassInfoRest {
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
-    public ResponseEntity<ClassInfoResponse> createClassInfo(
+    public ResponseEntity<ApiResponse<ClassInfoResponse>> createClassInfo(
             ClassInfoRequest request
     ) {
         logger.info("Creating ClassInfo");
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(classInfoService.create(request));
+        ClassInfoResponse result =
+                classInfoService.create(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        ApiResponse.success(
+                                "Thêm lớp học thành công",
+                                result
+                        )
+                );
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_OR_LECTURER)
-    public ResponseEntity<ClassInfoResponse> updateClassInfo(
+    public ResponseEntity<ApiResponse<ClassInfoResponse>> updateClassInfo(
             String id,
             ClassInfoRequest request
     ) {
@@ -77,88 +85,135 @@ public class ClassInfoRestImpl implements ClassInfoRest {
                 request.description()
         );
 
-        return ResponseEntity.ok(
-                classInfoService.update(updateRequest)
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
-    public ResponseEntity<String> deleteClassInfo(String id) {
-        logger.info("Deleting ClassInfo: id={}", id);
-
-        classInfoService.delete(id);
+        ClassInfoResponse result =
+                classInfoService.update(updateRequest);
 
         return ResponseEntity.ok(
-                "Class Info deleted successfully"
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<ClassInfoResponse> getClassInfoById(
-            String id
-    ) {
-        return ResponseEntity.ok(
-                classInfoService.getById(id)
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<ClassInfoResponse> getClassInfoByName(
-            String name
-    ) {
-        return ResponseEntity.ok(
-                classInfoService.getByName(name)
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<ClassInfoResponse>> getAllClassInfo() {
-        return ResponseEntity.ok(
-                classInfoService.getAll()
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<ClassInfoResponse>> getClassInfoByDomain(
-            String domain
-    ) {
-        return ResponseEntity.ok(
-                classInfoService.getByDomain(domain)
-        );
-    }
-
-    @Override
-    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
-    public ResponseEntity<List<ClassInfoResponse>> searchClassInfo(
-            String query,
-            Integer lowerLimit,
-            Integer upperLimit,
-            String orderBy,
-            String orderType
-    ) {
-        return ResponseEntity.ok(
-                classInfoService.search(
-                        query,
-                        lowerLimit,
-                        upperLimit,
-                        orderBy,
-                        orderType
+                ApiResponse.success(
+                        "Cập nhật lớp học thành công",
+                        result
                 )
         );
     }
 
     @Override
     @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
-    public ResponseEntity<Integer> getClassInfoCount(
+    public ResponseEntity<ApiResponse<Void>> deleteClassInfo(
+            String id
+    ) {
+        logger.info("Deleting ClassInfo: id={}", id);
+
+        classInfoService.delete(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Xóa lớp học thành công",
+                        null
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
+    public ResponseEntity<ApiResponse<ClassInfoResponse>> getClassInfoById(
+            String id
+    ) {
+        ClassInfoResponse result =
+                classInfoService.getById(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Lấy thông tin lớp học thành công",
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
+    public ResponseEntity<ApiResponse<ClassInfoResponse>> getClassInfoByName(
+            String name
+    ) {
+        ClassInfoResponse result =
+                classInfoService.getByName(name);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Tìm lớp học theo tên thành công",
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
+    public ResponseEntity<ApiResponse<List<ClassInfoResponse>>> getAllClassInfo() {
+
+        List<ClassInfoResponse> result =
+                classInfoService.getAll();
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Lấy danh sách lớp học thành công",
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
+    public ResponseEntity<ApiResponse<List<ClassInfoResponse>>> getClassInfoByDomain(
+            String domain
+    ) {
+        List<ClassInfoResponse> result =
+                classInfoService.getByDomain(domain);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Lấy danh sách lớp học theo lĩnh vực thành công",
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ALL_ROLES)
+    public ResponseEntity<ApiResponse<List<ClassInfoResponse>>> searchClassInfo(
+            String query,
+            Integer lowerLimit,
+            Integer upperLimit,
+            String orderBy,
+            String orderType
+    ) {
+        List<ClassInfoResponse> result =
+                classInfoService.search(
+                        query,
+                        lowerLimit,
+                        upperLimit,
+                        orderBy,
+                        orderType
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Tìm kiếm lớp học thành công",
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize(AuthorizationPolicies.ADMIN_ONLY)
+    public ResponseEntity<ApiResponse<Integer>> getClassInfoCount(
             String query
     ) {
+        Integer result = classInfoService.getCount(query);
+
         return ResponseEntity.ok(
-                classInfoService.getCount(query)
+                ApiResponse.success(
+                        "Đếm số lớp học thành công",
+                        result
+                )
         );
     }
 }
