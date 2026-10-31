@@ -404,7 +404,7 @@ class SecurityConfigTest {
                                 .content(body)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username")
+                .andExpect(jsonPath("$.data.username")
                         .value("student01"));
 
         verify(authService).register(
@@ -440,9 +440,9 @@ class SecurityConfigTest {
                                 .content(body)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken")
+                .andExpect(jsonPath("$.data.accessToken")
                         .value("test-access-token"))
-                .andExpect(jsonPath("$.tokenType")
+                .andExpect(jsonPath("$.data.tokenType")
                         .value("Bearer"));
 
         verify(authService).login(
@@ -481,7 +481,7 @@ class SecurityConfigTest {
                                 )
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username")
+                .andExpect(jsonPath("$.data.username")
                         .value("student01"));
 
         verify(authService).getCurrentUser("student01");

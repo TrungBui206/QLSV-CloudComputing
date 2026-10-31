@@ -5,6 +5,7 @@ import hd.quanlysinhvien_hibernatedao.dao.IClassInfoDao;
 import hd.quanlysinhvien_hibernatedao.dto.request.ClassInfoRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.ClassInfoResponse;
 import hd.quanlysinhvien_hibernatedao.entity.ClassInfo;
+import hd.quanlysinhvien_hibernatedao.mapper.ClassInfoMapper;
 import hd.quanlysinhvien_hibernatedao.service.ClassInfoService;
 
 import org.slf4j.Logger;
@@ -23,9 +24,14 @@ public class ClassInfoServiceImpl implements ClassInfoService {
             LoggerFactory.getLogger(ClassInfoServiceImpl.class);
 
     private final IClassInfoDao classInfoDao;
+    private final ClassInfoMapper classInfoMapper;
 
-    public ClassInfoServiceImpl(IClassInfoDao classInfoDao) {
+    public ClassInfoServiceImpl(
+            IClassInfoDao classInfoDao,
+            ClassInfoMapper classInfoMapper
+    ) {
         this.classInfoDao = classInfoDao;
+        this.classInfoMapper = classInfoMapper;
     }
 
     private String requiredText(
@@ -94,14 +100,6 @@ public class ClassInfoServiceImpl implements ClassInfoService {
         optionalDescription(request.description());
     }
 
-    private List<ClassInfoResponse> toResponses(
-            List<ClassInfo> entities
-    ) {
-        return entities.stream()
-                .map(ClassInfoResponse::from)
-                .toList();
-    }
-
     @Override
     @Transactional
     public ClassInfoResponse create(ClassInfoRequest request) {
@@ -116,12 +114,7 @@ public class ClassInfoServiceImpl implements ClassInfoService {
             );
         }
 
-        ClassInfo entity = new ClassInfo();
-        entity.setName(name);
-        entity.setDomain(request.domain().trim());
-        entity.setDescription(
-                optionalDescription(request.description())
-        );
+        ClassInfo entity = classInfoMapper.toEntity(request);
 
         ClassInfo saved = classInfoDao.create(entity);
         classInfoDao.flush();
@@ -132,7 +125,7 @@ public class ClassInfoServiceImpl implements ClassInfoService {
                 saved.getName()
         );
 
-        return ClassInfoResponse.from(saved);
+        return classInfoMapper.toResponse(saved);
     }
 
     @Override
@@ -155,11 +148,7 @@ public class ClassInfoServiceImpl implements ClassInfoService {
                     }
                 });
 
-        existing.setName(newName);
-        existing.setDomain(request.domain().trim());
-        existing.setDescription(
-                optionalDescription(request.description())
-        );
+        classInfoMapper.updateEntity(request, existing);
 
         ClassInfo updated = classInfoDao.update(existing);
         classInfoDao.flush();
@@ -170,7 +159,7 @@ public class ClassInfoServiceImpl implements ClassInfoService {
                 updated.getName()
         );
 
-        return ClassInfoResponse.from(updated);
+        return classInfoMapper.toResponse(updated);
     }
 
     @Override
@@ -191,13 +180,19 @@ public class ClassInfoServiceImpl implements ClassInfoService {
     @Override
     @Transactional(readOnly = true)
     public ClassInfoResponse getById(String id) {
-        return ClassInfoResponse.from(findExisting(id));
+        return classInfoMapper.toResponse(
+                findExisting(id)
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ClassInfoResponse getByName(String name) {
-        String validName = requiredText(name, "Tên lớp", 150);
+        String validName = requiredText(
+                name,
+                "Tên lớp",
+                150
+        );
 
         ClassInfo entity = classInfoDao
                 .findByNameIgnoreCase(validName)
@@ -208,22 +203,27 @@ public class ClassInfoServiceImpl implements ClassInfoService {
                         )
                 );
 
-        return ClassInfoResponse.from(entity);
+        return classInfoMapper.toResponse(entity);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ClassInfoResponse> getAll() {
-        return toResponses(classInfoDao.getAll());
+        return classInfoMapper.toResponses(
+                classInfoDao.getAll()
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ClassInfoResponse> getByDomain(String domain) {
-        String validDomain =
-                requiredText(domain, "Domain", 120);
+        String validDomain = requiredText(
+                domain,
+                "Domain",
+                120
+        );
 
-        return toResponses(
+        return classInfoMapper.toResponses(
                 classInfoDao.findByDomainIgnoreCase(validDomain)
         );
     }
@@ -237,7 +237,6 @@ public class ClassInfoServiceImpl implements ClassInfoService {
             String orderBy,
             String orderType
     ) {
-
         int from = lowerLimit == null ? 0 : lowerLimit;
         int to = upperLimit == null ? from + 10 : upperLimit;
 
@@ -248,7 +247,7 @@ public class ClassInfoServiceImpl implements ClassInfoService {
             );
         }
 
-        return toResponses(
+        return classInfoMapper.toResponses(
                 classInfoDao.search(
                         query,
                         from,
@@ -262,6 +261,8 @@ public class ClassInfoServiceImpl implements ClassInfoService {
     @Override
     @Transactional(readOnly = true)
     public Integer getCount(String query) {
-        return Math.toIntExact(classInfoDao.countSearch(query));
+        return Math.toIntExact(
+                classInfoDao.countSearch(query)
+        );
     }
 }

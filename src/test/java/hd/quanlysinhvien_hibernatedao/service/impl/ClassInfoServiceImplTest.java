@@ -5,16 +5,15 @@ import hd.quanlysinhvien_hibernatedao.dao.IClassInfoDao;
 import hd.quanlysinhvien_hibernatedao.dto.request.ClassInfoRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.ClassInfoResponse;
 import hd.quanlysinhvien_hibernatedao.entity.ClassInfo;
+import hd.quanlysinhvien_hibernatedao.mapper.ClassInfoMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -31,14 +30,21 @@ class ClassInfoServiceImplTest {
     @Mock
     private IClassInfoDao classInfoDao;
 
-    @InjectMocks
     private ClassInfoServiceImpl classInfoService;
+
+    private final ClassInfoMapper classInfoMapper =
+            Mappers.getMapper(ClassInfoMapper.class);
 
     private ClassInfo classInfo;
     private ClassInfoRequest request;
 
     @BeforeEach
     void setUp() {
+        classInfoService = new ClassInfoServiceImpl(
+                classInfoDao,
+                classInfoMapper
+        );
+
         classInfo = mock(ClassInfo.class);
 
         lenient().when(classInfo.getId())
@@ -64,9 +70,6 @@ class ClassInfoServiceImplTest {
 
     @Test
     void create_success() {
-        when(classInfoDao.findByNameIgnoreCase("CSE2026"))
-                .thenReturn(Optional.empty());
-
         when(classInfoDao.create(any(ClassInfo.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -77,6 +80,7 @@ class ClassInfoServiceImplTest {
         ArgumentCaptor<ClassInfo> captor =
                 ArgumentCaptor.forClass(ClassInfo.class);
 
+        verify(classInfoDao).findByNameIgnoreCase("CSE2026");
         verify(classInfoDao).create(captor.capture());
         verify(classInfoDao).flush();
 
@@ -85,6 +89,10 @@ class ClassInfoServiceImplTest {
         assertEquals("CSE2026", saved.getName());
         assertEquals("Computer Science", saved.getDomain());
         assertEquals("Lop khoa hoc may tinh", saved.getDescription());
+        assertNull(saved.getId());
+
+        assertEquals("CSE2026", result.name());
+        assertEquals("Computer Science", result.domain());
     }
 
     @Test
@@ -98,9 +106,7 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-
-        verify(classInfoDao, never())
-                .create(any(ClassInfo.class));
+        verify(classInfoDao, never()).create(any(ClassInfo.class));
     }
 
     @Test
@@ -111,7 +117,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -125,7 +130,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -139,7 +143,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -153,7 +156,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -167,7 +169,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -181,7 +182,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -231,22 +231,23 @@ class ClassInfoServiceImplTest {
         when(classInfoDao.findById("class-001"))
                 .thenReturn(Optional.of(classInfo));
 
-        when(classInfoDao.findByNameIgnoreCase("CSE2026"))
-                .thenReturn(Optional.empty());
-
         when(classInfoDao.update(classInfo))
                 .thenReturn(classInfo);
 
         ClassInfoResponse result = classInfoService.update(request);
 
         assertNotNull(result);
+        assertEquals("class-001", result.id());
 
         verify(classInfoDao).update(classInfo);
         verify(classInfoDao).flush();
 
-        verify(classInfo).setName("CSE2026");
-        verify(classInfo).setDomain("Computer Science");
-        verify(classInfo).setDescription("Lop khoa hoc may tinh");
+        verify(classInfo, atLeastOnce()).setName("CSE2026");
+        verify(classInfo, atLeastOnce()).setDomain("Computer Science");
+        verify(classInfo, atLeastOnce())
+                .setDescription("Lop khoa hoc may tinh");
+
+        verify(classInfo, never()).setId(anyString());
     }
 
     @Test
@@ -263,7 +264,6 @@ class ClassInfoServiceImplTest {
         ClassInfoResponse result = classInfoService.update(request);
 
         assertNotNull(result);
-
         verify(classInfoDao).update(classInfo);
         verify(classInfoDao).flush();
     }
@@ -286,9 +286,7 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
-
-        verify(classInfoDao, never())
-                .update(any(ClassInfo.class));
+        verify(classInfoDao, never()).update(any(ClassInfo.class));
     }
 
     @Test
@@ -302,9 +300,7 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-
-        verify(classInfoDao, never())
-                .update(any(ClassInfo.class));
+        verify(classInfoDao, never()).update(any(ClassInfo.class));
     }
 
     @Test
@@ -317,7 +313,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -343,9 +338,7 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-
-        verify(classInfoDao, never())
-                .delete(any(ClassInfo.class));
+        verify(classInfoDao, never()).delete(any(ClassInfo.class));
     }
 
     @Test
@@ -356,7 +349,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -369,6 +361,8 @@ class ClassInfoServiceImplTest {
                 classInfoService.getById("class-001");
 
         assertNotNull(result);
+        assertEquals("class-001", result.id());
+        assertEquals("CSE2026", result.name());
 
         verify(classInfoDao).findById("class-001");
     }
@@ -395,6 +389,7 @@ class ClassInfoServiceImplTest {
                 classInfoService.getByName("CSE2026");
 
         assertNotNull(result);
+        assertEquals("CSE2026", result.name());
 
         verify(classInfoDao).findByNameIgnoreCase("CSE2026");
     }
@@ -421,6 +416,7 @@ class ClassInfoServiceImplTest {
 
         assertNotNull(result);
         assertEquals(1, result.size());
+        assertEquals("class-001", result.get(0).id());
 
         verify(classInfoDao).getAll();
     }
@@ -458,7 +454,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -508,7 +503,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -522,7 +516,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -536,7 +529,6 @@ class ClassInfoServiceImplTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-
         verifyNoInteractions(classInfoDao);
     }
 
@@ -548,7 +540,6 @@ class ClassInfoServiceImplTest {
         Integer result = classInfoService.getCount("CSE");
 
         assertEquals(5, result);
-
         verify(classInfoDao).countSearch("CSE");
     }
 

@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
@@ -7,8 +6,8 @@ import hd.quanlysinhvien_hibernatedao.dto.request.AcademicYearRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.AcademicYearResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.entity.AcademicYear;
+import hd.quanlysinhvien_hibernatedao.mapper.AcademicYearMapper;
 import hd.quanlysinhvien_hibernatedao.service.AcademicYearService;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -25,9 +24,12 @@ public class AcademicYearServiceImpl implements AcademicYearService {
             Set.of("id", "code", "name", "startYear", "endYear", "createdAt");
 
     private final IAcademicYearDao academicYearDao;
+    private final AcademicYearMapper academicYearMapper;
 
-    public AcademicYearServiceImpl(IAcademicYearDao academicYearDao) {
+    public AcademicYearServiceImpl(IAcademicYearDao academicYearDao,
+                                   AcademicYearMapper academicYearMapper) {
         this.academicYearDao = academicYearDao;
+        this.academicYearMapper = academicYearMapper;
     }
 
     @Override
@@ -37,19 +39,18 @@ public class AcademicYearServiceImpl implements AcademicYearService {
             int page,
             int size,
             String sortBy,
-            String direction) {
-
+            String direction
+    ) {
         Pageable pageable = SearchUtils.pageable(
                 page, size, sortBy, direction, SORT_FIELDS
         );
-
         String kw = SearchUtils.keyword(keyword);
 
         Page<AcademicYearResponse> result = academicYearDao
                 .findByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
                         kw, kw, pageable
                 )
-                .map(AcademicYearResponse::from);
+                .map(academicYearMapper::toResponse);
 
         return PageResponse.from(result);
     }
@@ -57,82 +58,62 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     @Override
     @Transactional(readOnly = true)
     public AcademicYearResponse findById(Long id) {
-
-        AcademicYear academicYear = getAcademicYear(id);
-
-        return AcademicYearResponse.from(academicYear);
+        return academicYearMapper.toResponse(getAcademicYear(id));
     }
 
     @Override
     @Transactional
     public AcademicYearResponse create(AcademicYearRequest request) {
-
         checkYears(request);
 
         if (academicYearDao.existsByCode(request.code())) {
             throw codeExists(request.code());
         }
 
-        AcademicYear academicYear = new AcademicYear();
-
-        apply(academicYear, request);
-
-        AcademicYear saved = academicYearDao.create(academicYear);
-
-        return AcademicYearResponse.from(saved);
+        AcademicYear entity = academicYearMapper.toEntity(request);
+        AcademicYear saved = academicYearDao.create(entity);
+        return academicYearMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
-    public AcademicYearResponse update(
-            Long id,
-            AcademicYearRequest request) {
-
-        AcademicYear academicYear = getAcademicYear(id);
-
+    public AcademicYearResponse update(Long id, AcademicYearRequest request) {
+        AcademicYear entity = getAcademicYear(id);
         checkYears(request);
 
         if (academicYearDao.existsByCodeAndIdNot(request.code(), id)) {
             throw codeExists(request.code());
         }
 
-        apply(academicYear, request);
-
-        AcademicYear updated = academicYearDao.update(academicYear);
-
-        return AcademicYearResponse.from(updated);
+        academicYearMapper.updateEntity(request, entity);
+        AcademicYear updated = academicYearDao.update(entity);
+        return academicYearMapper.toResponse(updated);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-
         if (!academicYearDao.exists(id)) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Không tìm thấy niên khóa id = " + id
             );
         }
-
         academicYearDao.deleteByPk(id);
     }
 
     private AcademicYear getAcademicYear(Long id) {
-
-        AcademicYear academicYear = academicYearDao.get(id);
-
-        if (academicYear == null) {
+        AcademicYear entity = academicYearDao.get(id);
+        if (entity == null) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Không tìm thấy niên khóa id = " + id
             );
         }
-
-        return academicYear;
+        return entity;
     }
 
     private void checkYears(AcademicYearRequest request) {
-
         if (request.endYear() < request.startYear()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -141,19 +122,7 @@ public class AcademicYearServiceImpl implements AcademicYearService {
         }
     }
 
-    private void apply(
-            AcademicYear academicYear,
-            AcademicYearRequest request) {
-
-        academicYear.setCode(request.code());
-        academicYear.setName(request.name());
-        academicYear.setDescription(request.description());
-        academicYear.setStartYear(request.startYear());
-        academicYear.setEndYear(request.endYear());
-    }
-
     private ResponseStatusException codeExists(String code) {
-
         return new ResponseStatusException(
                 HttpStatus.CONFLICT,
                 "Mã niên khóa đã tồn tại: " + code

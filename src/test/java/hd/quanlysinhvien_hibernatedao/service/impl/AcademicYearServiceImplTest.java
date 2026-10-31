@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.dao.IAcademicYearDao;
@@ -6,13 +5,14 @@ import hd.quanlysinhvien_hibernatedao.dto.request.AcademicYearRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.AcademicYearResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.entity.AcademicYear;
+import hd.quanlysinhvien_hibernatedao.mapper.AcademicYearMapper;
+import org.mapstruct.factory.Mappers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,7 +33,9 @@ class AcademicYearServiceImplTest {
     @Mock
     private IAcademicYearDao academicYearDao;
 
-    @InjectMocks
+    private final AcademicYearMapper academicYearMapper =
+            Mappers.getMapper(AcademicYearMapper.class);
+
     private AcademicYearServiceImpl academicYearService;
 
     private AcademicYear academicYear;
@@ -41,6 +43,10 @@ class AcademicYearServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        academicYearService = new AcademicYearServiceImpl(
+                academicYearDao, academicYearMapper
+        );
+
         academicYear = new AcademicYear();
         academicYear.setCode("AY2026");
         academicYear.setName("Academic Year 2026-2027");
@@ -327,4 +333,81 @@ class AcademicYearServiceImplTest {
 
         verify(academicYearDao, never()).deleteByPk(anyLong());
     }
+
+    @Test
+    void create_keepsIdAndTimestampsForPersistence() {
+        when(academicYearDao.create(any(AcademicYear.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AcademicYearResponse result = academicYearService.create(request);
+
+        ArgumentCaptor<AcademicYear> captor = ArgumentCaptor.forClass(AcademicYear.class);
+        verify(academicYearDao).create(captor.capture());
+        assertNull(captor.getValue().getId());
+        assertNull(captor.getValue().getCreatedAt());
+        assertNull(captor.getValue().getUpdatedAt());
+        assertNull(result.id());
+    }
+
+    @Test
+    void update_preservesIdAndTimestamps() {
+        academicYear.setId(1L);
+        java.time.LocalDateTime createdAt = java.time.LocalDateTime.of(2026, 1, 1, 8, 0);
+        java.time.LocalDateTime updatedAt = java.time.LocalDateTime.of(2026, 1, 2, 9, 0);
+        academicYear.setCreatedAt(createdAt);
+        academicYear.setUpdatedAt(updatedAt);
+        when(academicYearDao.get(1L)).thenReturn(academicYear);
+        when(academicYearDao.update(academicYear)).thenReturn(academicYear);
+
+        AcademicYearRequest changed = new AcademicYearRequest(
+                "AY2027", "Updated", "Changed description", 2027, 2028
+        );
+        AcademicYearResponse result = academicYearService.update(1L, changed);
+
+        assertEquals(1L, academicYear.getId());
+        assertEquals(createdAt, academicYear.getCreatedAt());
+        assertEquals(updatedAt, academicYear.getUpdatedAt());
+        assertEquals("AY2027", result.code());
+        assertEquals("Updated", result.name());
+        assertEquals(2027, result.startYear());
+        assertEquals(2028, result.endYear());
+        verify(academicYearDao).existsByCodeAndIdNot("AY2027", 1L);
+        verify(academicYearDao).update(academicYear);
+    }
+
+    @Test
+    void search_invalidPageReturnsBadRequest() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> academicYearService.search("", -1, 10, "code", "asc")
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(academicYearDao);
+    }
+
+    @Test
+    void search_invalidSortFieldReturnsBadRequest() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> academicYearService.search("", 0, 10, "wrong", "asc")
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(academicYearDao);
+    }
+
+    @Test
+    void search_trimsKeywordBeforeDao() {
+        when(academicYearDao.findByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
+                eq("AY2026"), eq("AY2026"), any(Pageable.class)
+        )).thenReturn(new PageImpl<>(List.of(academicYear)));
+
+        PageResponse<AcademicYearResponse> result = academicYearService.search(
+                "  AY2026  ", 0, 10, "code", "asc"
+        );
+        assertEquals(1, result.content().size());
+        verify(academicYearDao).findByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(
+                eq("AY2026"), eq("AY2026"), any(Pageable.class)
+        );
+    }
+
 }

@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.dao.IDepartmentDao;
@@ -7,13 +6,14 @@ import hd.quanlysinhvien_hibernatedao.dto.request.DepartmentRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.DepartmentResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.entity.Department;
+import hd.quanlysinhvien_hibernatedao.mapper.DepartmentMapper;
+import org.mapstruct.factory.Mappers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -37,7 +37,8 @@ class DepartmentServiceImplTest {
     @Mock
     private IStudentDao studentDao;
 
-    @InjectMocks
+    private final DepartmentMapper departmentMapper = Mappers.getMapper(DepartmentMapper.class);
+
     private DepartmentServiceImpl departmentService;
 
     private Department department;
@@ -45,17 +46,15 @@ class DepartmentServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        departmentService = new DepartmentServiceImpl(departmentDao, studentDao, departmentMapper);
+
         department = new Department();
+        department.setId(1L);
         department.setCode("CSE");
         department.setName("Computer Science");
         department.setDescription("Computer Science Department");
 
-        request = mock(DepartmentRequest.class);
-
-        lenient().when(request.code()).thenReturn("CSE");
-        lenient().when(request.name()).thenReturn("Computer Science");
-        lenient().when(request.description())
-                .thenReturn("Computer Science Department");
+        request = new DepartmentRequest("CSE", "Computer Science", "Computer Science Department");
     }
 
     @Test
@@ -291,4 +290,50 @@ class DepartmentServiceImplTest {
 
         verify(departmentDao, never()).deleteByPk(anyLong());
     }
+
+    @Test
+    void search_invalidPage() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> departmentService.search("", -1, 10, "name", "asc")
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(departmentDao, studentDao);
+    }
+
+    @Test
+    void search_invalidSortField() {
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> departmentService.search("", 0, 10, "unknown", "asc")
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(departmentDao, studentDao);
+    }
+
+    @Test
+    void update_preservesIdAndTimestamps() {
+        java.time.LocalDateTime createdAt = java.time.LocalDateTime.of(2026, 1, 1, 8, 0);
+        java.time.LocalDateTime updatedAt = java.time.LocalDateTime.of(2026, 1, 2, 9, 0);
+        department.setCreatedAt(createdAt);
+        department.setUpdatedAt(updatedAt);
+        when(departmentDao.get(1L)).thenReturn(department);
+        when(departmentDao.update(department)).thenReturn(department);
+
+        DepartmentRequest changed = request.toBuilder()
+                .code("IT")
+                .name("Information Technology")
+                .build();
+
+        DepartmentResponse result = departmentService.update(1L, changed);
+
+        assertEquals(1L, department.getId());
+        assertEquals(createdAt, department.getCreatedAt());
+        assertEquals(updatedAt, department.getUpdatedAt());
+        assertEquals("IT", result.code());
+        assertEquals("Information Technology", result.name());
+        verify(departmentDao).existsByCodeAndIdNot("IT", 1L);
+        verify(departmentDao).update(department);
+    }
+
 }

@@ -1,4 +1,3 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.common.util.SearchUtils;
@@ -9,8 +8,8 @@ import hd.quanlysinhvien_hibernatedao.dto.response.PageResponse;
 import hd.quanlysinhvien_hibernatedao.dto.response.StudentResponse;
 import hd.quanlysinhvien_hibernatedao.entity.Department;
 import hd.quanlysinhvien_hibernatedao.entity.Student;
+import hd.quanlysinhvien_hibernatedao.mapper.StudentMapper;
 import hd.quanlysinhvien_hibernatedao.service.StudentService;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -29,21 +28,22 @@ public class StudentServiceImpl implements StudentService {
 
     private final IStudentDao studentDao;
     private final IDepartmentDao departmentDao;
+    private final StudentMapper studentMapper;
 
     public StudentServiceImpl(
             IStudentDao studentDao,
-            IDepartmentDao departmentDao) {
+            IDepartmentDao departmentDao,
+            StudentMapper studentMapper
+    ) {
         this.studentDao = studentDao;
         this.departmentDao = departmentDao;
+        this.studentMapper = studentMapper;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<StudentResponse> findAll() {
-        return studentDao.getAll()
-                .stream()
-                .map(StudentResponse::from)
-                .toList();
+        return studentMapper.toResponses(studentDao.getAll());
     }
 
     @Override
@@ -54,98 +54,77 @@ public class StudentServiceImpl implements StudentService {
             int page,
             int size,
             String sortBy,
-            String direction) {
-
+            String direction
+    ) {
         Pageable pageable = SearchUtils.pageable(
                 page, size, sortBy, direction, SORT_FIELDS
         );
-
         String kw = SearchUtils.keyword(keyword);
-
         Page<StudentResponse> result = studentDao
                 .search(kw, departmentId, pageable)
-                .map(StudentResponse::from);
-
+                .map(studentMapper::toResponse);
         return PageResponse.from(result);
     }
 
     @Override
     @Transactional(readOnly = true)
     public StudentResponse findById(Long id) {
-        return StudentResponse.from(getStudent(id));
+        return studentMapper.toResponse(getStudent(id));
     }
 
     @Override
     @Transactional
     public StudentResponse create(StudentRequest request) {
-
         if (studentDao.existsByEmail(request.email())) {
             throw emailExists(request.email());
         }
-
-        Student student = new Student();
-
-        apply(student, request);
-
+        Department department = getDepartment(request.departmentId());
+        Student student = studentMapper.toEntity(request);
+        student.setDepartment(department);
         Student saved = studentDao.create(student);
-
-        return StudentResponse.from(saved);
+        return studentMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
     public StudentResponse update(Long id, StudentRequest request) {
-
         Student student = getStudent(id);
-
         if (studentDao.existsByEmailAndIdNot(request.email(), id)) {
             throw emailExists(request.email());
         }
-
-        apply(student, request);
-
+        Department department = getDepartment(request.departmentId());
+        studentMapper.updateEntity(request, student);
+        student.setDepartment(department);
         Student updated = studentDao.update(student);
-
-        return StudentResponse.from(updated);
+        return studentMapper.toResponse(updated);
     }
 
     @Override
     @Transactional
     public void delete(Long id) {
-
         if (!studentDao.exists(id)) {
             throw studentNotFound(id);
         }
-
         studentDao.deleteByPk(id);
     }
 
     private Student getStudent(Long id) {
-
         Student student = studentDao.get(id);
-
         if (student == null) {
             throw studentNotFound(id);
         }
-
         return student;
     }
 
-    private void apply(Student student, StudentRequest request) {
-
-        Department department = departmentDao.get(request.departmentId());
-
+    private Department getDepartment(Long departmentId) {
+        Department department = departmentDao.get(departmentId);
         if (department == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Department không tồn tại: " + request.departmentId()
+                    "Department không tồn tại: " + departmentId
             );
         }
-
-        student.setName(request.name());
-        student.setEmail(request.email());
-        student.setDob(request.dob());
-        student.setDepartment(department);
+        return department;
     }
 
     private ResponseStatusException studentNotFound(Long id) {

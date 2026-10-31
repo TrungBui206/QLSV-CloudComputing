@@ -1,18 +1,19 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.dao.IDocumentDao;
 import hd.quanlysinhvien_hibernatedao.dto.response.DocumentResponse;
 import hd.quanlysinhvien_hibernatedao.entity.Document;
+import hd.quanlysinhvien_hibernatedao.mapper.DocumentMapper;
 import hd.quanlysinhvien_hibernatedao.service.StorageService;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mapstruct.factory.Mappers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
@@ -42,8 +43,19 @@ class DocumentServiceImplTest {
     @Mock
     private StorageService storageService;
 
-    @InjectMocks
+    private final DocumentMapper documentMapper =
+            Mappers.getMapper(DocumentMapper.class);
+
     private DocumentServiceImpl documentService;
+
+    @BeforeEach
+    void setUp() {
+        documentService = new DocumentServiceImpl(
+                documentDao,
+                storageService,
+                documentMapper
+        );
+    }
 
     // ==========================================
     // HELPER METHODS

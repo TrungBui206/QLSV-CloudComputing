@@ -1,9 +1,10 @@
-
 package hd.quanlysinhvien_hibernatedao.service.impl;
 
 import hd.quanlysinhvien_hibernatedao.dao.IDocumentDao;
+import hd.quanlysinhvien_hibernatedao.dto.request.DocumentMetadataRequest;
 import hd.quanlysinhvien_hibernatedao.dto.response.DocumentResponse;
 import hd.quanlysinhvien_hibernatedao.entity.Document;
+import hd.quanlysinhvien_hibernatedao.mapper.DocumentMapper;
 import hd.quanlysinhvien_hibernatedao.service.DocumentService;
 import hd.quanlysinhvien_hibernatedao.service.StorageService;
 
@@ -42,13 +43,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final IDocumentDao documentDao;
     private final StorageService storageService;
+    private final DocumentMapper documentMapper;
 
     public DocumentServiceImpl(
             IDocumentDao documentDao,
-            StorageService storageService) {
+            StorageService storageService,
+            DocumentMapper documentMapper) {
 
         this.documentDao = documentDao;
         this.storageService = storageService;
+        this.documentMapper = documentMapper;
     }
 
     @Override
@@ -133,26 +137,28 @@ public class DocumentServiceImpl implements DocumentService {
                     documentDao.update(oldDocument);
                 }
 
-                Document document = new Document();
+                DocumentMetadataRequest metadata =
+                        DocumentMetadataRequest.builder()
+                                .appId(normalizedAppId)
+                                .name(fileName)
+                                .path(filePath)
+                                .owner("system")
+                                .deleted(false)
+                                .active(true)
+                                .version(
+                                        lastVersion == null
+                                                ? 1.0
+                                                : lastVersion + 1.0
+                                )
+                                .build();
 
-                document.setAppId(normalizedAppId);
-                document.setName(fileName);
-                document.setPath(filePath);
-                document.setOwner("system");
-                document.setDeleted(false);
-                document.setActive(true);
-
-                document.setVersion(
-                        lastVersion == null
-                                ? 1.0
-                                : lastVersion + 1.0
-                );
+                Document document = documentMapper.toEntity(metadata);
 
                 Document saved = documentDao.create(document);
 
                 documentDao.flush();
 
-                result.add(DocumentResponse.from(saved));
+                result.add(documentMapper.toResponse(saved));
 
                 logger.info(
                         "Created document: name={}, appId={}, version={}",
@@ -196,10 +202,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional(readOnly = true)
     public List<DocumentResponse> listAll() {
 
-        return documentDao.findAllNotDeleted()
-                .stream()
-                .map(DocumentResponse::from)
-                .toList();
+        return documentMapper.toResponses(
+                documentDao.findAllNotDeleted()
+        );
     }
 
     @Override
@@ -213,19 +218,16 @@ public class DocumentServiceImpl implements DocumentService {
             );
         }
 
-        return documentDao.getDocumentByAppId(
-                        appId.trim()
-                )
-                .stream()
-                .map(DocumentResponse::from)
-                .toList();
+        return documentMapper.toResponses(
+                documentDao.getDocumentByAppId(appId.trim())
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
     public DocumentResponse getById(String id) {
 
-        return DocumentResponse.from(findById(id));
+        return documentMapper.toResponse(findById(id));
     }
 
     @Override
@@ -238,7 +240,8 @@ public class DocumentServiceImpl implements DocumentService {
             String orderType,
             String appId) {
 
-        return documentDao.getDoc(
+        return documentMapper.toResponses(
+                documentDao.getDoc(
                         query,
                         lowerLimit,
                         upperLimit,
@@ -246,9 +249,7 @@ public class DocumentServiceImpl implements DocumentService {
                         orderType,
                         appId
                 )
-                .stream()
-                .map(DocumentResponse::from)
-                .toList();
+        );
     }
 
     @Override

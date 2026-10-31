@@ -1,3 +1,4 @@
+
 package hd.quanlysinhvien_hibernatedao.rest.impl;
 
 import hd.quanlysinhvien_hibernatedao.dto.request.ClassInfoRequest;
@@ -78,12 +79,9 @@ public class ClassInfoRestImpl implements ClassInfoRest {
             );
         }
 
-        ClassInfoRequest updateRequest = new ClassInfoRequest(
-                id,
-                request.name(),
-                request.domain(),
-                request.description()
-        );
+        ClassInfoRequest updateRequest = request.toBuilder()
+                .id(id)
+                .build();
 
         ClassInfoResponse result =
                 classInfoService.update(updateRequest);

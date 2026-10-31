@@ -143,13 +143,13 @@ class StudentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name")
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name")
                         .value("Nguyen Van A"))
-                .andExpect(jsonPath("$[0].email")
+                .andExpect(jsonPath("$.data[0].email")
                         .value("student.a@example.com"))
-                .andExpect(jsonPath("$[0].departmentId").value(1))
-                .andExpect(jsonPath("$[0].departmentName")
+                .andExpect(jsonPath("$.data[0].departmentId").value(1))
+                .andExpect(jsonPath("$.data[0].departmentName")
                         .value("Computer Science"));
 
         verify(studentService).findAll();
@@ -165,7 +165,7 @@ class StudentRestImplTest {
                                 .header("Authorization", token("LECTURER"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name")
+                .andExpect(jsonPath("$.data[0].name")
                         .value("Nguyen Van A"));
 
         verify(studentService).findAll();
@@ -181,7 +181,7 @@ class StudentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1));
+                .andExpect(jsonPath("$.data[0].id").value(1));
 
         verify(studentService).findAll();
     }
@@ -196,7 +196,7 @@ class StudentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.data.length()").value(0));
     }
 
     @Test
@@ -227,13 +227,13 @@ class StudentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].name")
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].name")
                         .value("Nguyen Van A"))
-                .andExpect(jsonPath("$.page").value(0))
-                .andExpect(jsonPath("$.size").value(10))
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.totalPages").value(1));
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.totalPages").value(1));
 
         verify(studentService).search(
                 "", null, 0, 10, "id", "asc"
@@ -266,12 +266,12 @@ class StudentRestImplTest {
                                 .param("direction", "desc")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(1))
-                .andExpect(jsonPath("$.content[0].departmentId").value(1))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(5))
-                .andExpect(jsonPath("$.totalElements").value(6))
-                .andExpect(jsonPath("$.totalPages").value(2));
+                .andExpect(jsonPath("$.data.content[0].id").value(1))
+                .andExpect(jsonPath("$.data.content[0].departmentId").value(1))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(5))
+                .andExpect(jsonPath("$.data.totalElements").value(6))
+                .andExpect(jsonPath("$.data.totalPages").value(2));
 
         verify(studentService).search(
                 "nguyen", 1L, 1, 5, "name", "desc"
@@ -299,8 +299,8 @@ class StudentRestImplTest {
                                 .param("keyword", "unknown")
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content.length()").value(0))
-                .andExpect(jsonPath("$.totalElements").value(0));
+                .andExpect(jsonPath("$.data.content.length()").value(0))
+                .andExpect(jsonPath("$.data.totalElements").value(0));
     }
 
     @Test
@@ -332,13 +332,13 @@ class StudentRestImplTest {
                                 .header("Authorization", token("ADMIN"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name")
                         .value("Nguyen Van A"))
-                .andExpect(jsonPath("$.email")
+                .andExpect(jsonPath("$.data.email")
                         .value("student.a@example.com"))
-                .andExpect(jsonPath("$.dob").value("2004-01-15"))
-                .andExpect(jsonPath("$.departmentName")
+                .andExpect(jsonPath("$.data.dob").value("2004-01-15"))
+                .andExpect(jsonPath("$.data.departmentName")
                         .value("Computer Science"));
 
         verify(studentService).findById(1L);
@@ -354,7 +354,7 @@ class StudentRestImplTest {
                                 .header("Authorization", token("STUDENT"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.data.id").value(1));
 
         verify(studentService).findById(1L);
     }
@@ -413,12 +413,12 @@ class StudentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name")
                         .value("Nguyen Van A"))
-                .andExpect(jsonPath("$.email")
+                .andExpect(jsonPath("$.data.email")
                         .value("student.a@example.com"))
-                .andExpect(jsonPath("$.departmentId").value(1));
+                .andExpect(jsonPath("$.data.departmentId").value(1));
 
         verify(studentService).create(studentRequest());
     }
@@ -435,7 +435,7 @@ class StudentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.data.id").value(1));
 
         verify(studentService).create(studentRequest());
     }
@@ -634,10 +634,10 @@ class StudentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name")
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name")
                         .value("Nguyen Van B"))
-                .andExpect(jsonPath("$.email")
+                .andExpect(jsonPath("$.data.email")
                         .value("student.b@example.com"));
 
         verify(studentService).update(1L, studentRequest());
@@ -657,7 +657,7 @@ class StudentRestImplTest {
                                 .content(VALID_REQUEST)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1));
+                .andExpect(jsonPath("$.data.id").value(1));
 
         verify(studentService).update(1L, studentRequest());
     }
