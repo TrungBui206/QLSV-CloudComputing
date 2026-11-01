@@ -406,8 +406,10 @@
 
     // Trang classes.html đã có nút Đăng xuất
     // nên không tạo thêm nút thứ hai trên trang đó.
+
     const existingLogout =
-        document.getElementById('logoutBtn');
+        document.querySelector('#logoutBtn, .menu-logout');
+
 
     if (!existingLogout && nav) {
         const divider = document.createElement('div');
@@ -418,6 +420,7 @@
             document.createElement('button');
 
         logoutButton.type = 'button';
+        logoutButton.id = 'logoutBtn';
 
         logoutButton.className = 'menu-logout';
 
