@@ -1,0 +1,194 @@
+# Hệ thống Quản lý Sinh viên (QuanLySinhVien_HibernateDAO)
+
+Ứng dụng web quản lý Khoa, Lớp học, Sinh viên, Niên khóa và Tài liệu.
+Backend Spring Boot (REST + Hibernate DAO tự viết), frontend HTML/JS tĩnh,
+xác thực bằng JWT và phân quyền theo 3 vai trò ADMIN / LECTURER / STUDENT.
+
+---
+
+## 1. Công nghệ
+
+| Thành phần | Công nghệ |
+|---|---|
+| Ngôn ngữ / build | Java 21, Maven (dùng `mvnw.cmd` có sẵn) |
+| Framework | Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, Security) |
+| Truy cập dữ liệu | Hibernate DAO tự viết (`IGenericDao`, `HibernateGenericDao`, `HibernatePaginationSortingDao`) |
+| CSDL | MySQL (chạy thật), H2 (chỉ dùng khi chạy test) |
+| Lưu trữ tệp | MinIO |
+| Xác thực | JWT (OAuth2 Resource Server, HS256) |
+| Ánh xạ | MapStruct, Lombok, Builder |
+| Tài liệu API | springdoc-openapi (Swagger UI) |
+| Kiểm thử, chất lượng | JUnit 5, Mockito, JaCoCo, SonarQube |
+
+---
+
+## 2. Kiến trúc
+
+Dự án chia **theo tầng** và **theo nghiệp vụ**. Luồng xử lý: `REST -> Service -> DAO -> CSDL`.
+Mỗi tầng gồm interface + thư mục `impl`.
+
+```
+src/main/java/hd/quanlysinhvien_hibernatedao
+├── rest/            (interface)  + rest/impl/      : nhận request, @PreAuthorize phân quyền
+├── service/         (interface)  + service/impl/   : nghiệp vụ, kiểm tra dữ liệu, giao dịch
+├── dao/             (interface)  + dao/impl/       : truy vấn Hibernate/JPA
+├── hibernateDao/                                   : DAO generic dùng chung
+├── entity/                                         : thực thể JPA
+├── dto/request, dto/response                       : dữ liệu vào/ra API
+├── mapper/                                         : MapStruct (entity <-> DTO)
+├── wrapper/                                        : ApiResponse, ApiError
+├── common/          exception, handler (GlobalExceptionHandler), util
+├── config/          SecurityConfig, MinioConfig, OpenApiConfig, BootstrapUsersConfig ...
+└── security/
+    ├── authorization/   Role, AuthorizationPolicies
+    ├── jwt/             tạo/kiểm tra JWT
+    ├── handler/         trả 401/403 dạng JSON
+    └── scope/           phạm vi dữ liệu (STUDENT chỉ xem hồ sơ của mình)
+
+src/main/resources/static      : giao diện (login.html + 5 trang nghiệp vụ)
+  ├── menu.js       menu, nút Đăng xuất, nút biểu tượng dùng chung
+  ├── role-ui.js    ẩn/hiện nút theo vai trò (khớp với backend)
+  └── role-ui.css   ẩn mặc định nút quản trị cho tới khi xác định vai trò
+```
+
+**Quy ước bắt buộc khi sửa hoặc thêm code:** đặt đúng tầng, đúng nghiệp vụ.
+Quy tắc nghiệp vụ nằm ở Service, truy vấn nằm ở DAO, phân quyền theo vai trò nằm ở REST (`@PreAuthorize`).
+
+---
+
+## 3. Chuẩn bị môi trường
+
+1. **JDK 21** và **MySQL** đang chạy (mặc định `127.0.0.1:3306`). Tạo sẵn database:
+   ```sql
+   CREATE DATABASE educaze_hibernate CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+   Bảng được Hibernate tự tạo/cập nhật (`ddl-auto=update`).
+2. **MinIO** đang chạy (mặc định `http://localhost:9000`, bucket `student-documents`).
+   Chỉ cần cho chức năng Tài liệu; các nghiệp vụ khác vẫn chạy khi không có MinIO.
+3. **Biến môi trường** (đặt trong *Run Configuration* của IntelliJ hoặc biến hệ thống):
+
+| Biến | Bắt buộc | Ý nghĩa |
+|---|---|---|
+| `DB_USER` | không (mặc định `root`) | Tài khoản MySQL |
+| `DB_PASSWORD` | **có** | Mật khẩu MySQL |
+| `AUTH_JWT_SECRET` | **có** | Khóa ký JWT, chuỗi **Base64** của ít nhất **32 byte** |
+| `MINIO_ENDPOINT` | không (mặc định `http://localhost:9000`) | Địa chỉ MinIO |
+| `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | **có** (khi dùng Tài liệu) | Khóa truy cập MinIO |
+| `MINIO_BUCKET` | không (mặc định `student-documents`) | Tên bucket |
+| `APP_BOOTSTRAP_ENABLED` | không (mặc định `false`) | `true` để tự tạo tài khoản `admin` và `lecturer` khi khởi động |
+| `APP_BOOTSTRAP_ADMIN_PASSWORD`, `APP_BOOTSTRAP_LECTURER_PASSWORD` | khi bật bootstrap | Mật khẩu ban đầu, 12–72 ký tự |
+
+Tạo nhanh một `AUTH_JWT_SECRET` hợp lệ bằng PowerShell:
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+```
+
+> Không đưa mật khẩu, khóa hay token thật vào mã nguồn hoặc README.
+
+---
+
+## 4. Chạy ứng dụng
+
+- **IntelliJ:** chạy lớp `QuanLySinhVienHibernateDaoApplication` (đã khai báo biến môi trường).
+- **Dòng lệnh:**
+  ```powershell
+  .\mvnw.cmd spring-boot:run
+  ```
+
+Sau khi thấy `Started QuanLySinhVienHibernateDaoApplication`:
+
+| Địa chỉ | Nội dung |
+|---|---|
+| http://localhost:8082/login.html | Trang đăng nhập |
+| http://localhost:8082/swagger-ui/index.html | Swagger UI (đường dẫn mặc định của springdoc) |
+
+---
+
+## 5. Tài khoản thử nghiệm
+
+| Vai trò | Cách có tài khoản |
+|---|---|
+| ADMIN | `admin`, tạo tự động khi `APP_BOOTSTRAP_ENABLED=true` (mật khẩu = `APP_BOOTSTRAP_ADMIN_PASSWORD`) |
+| LECTURER | `lecturer`, tạo tự động cùng lúc (mật khẩu = `APP_BOOTSTRAP_LECTURER_PASSWORD`) |
+| STUDENT | Tự đăng ký qua API (tài khoản mới luôn có vai trò STUDENT) |
+
+Đăng ký STUDENT (Postman):
+```
+POST http://localhost:8082/api/auth/register
+Content-Type: application/json
+
+{ "username": "student01", "email": "student01@example.com", "password": "<mật khẩu tối thiểu 8 ký tự>" }
+```
+Tên `admin` và `lecturer` được dành riêng, không đăng ký được.
+
+---
+
+## 6. Phân quyền
+
+✔ = được phép, ✘ = bị chặn (backend trả **403**; giao diện ẩn nút tương ứng).
+
+| Nghiệp vụ | Thao tác | ADMIN | LECTURER | STUDENT |
+|---|---|:-:|:-:|:-:|
+| Khoa | Xem | ✔ | ✔ | ✔ |
+| | Thêm / Sửa / Xóa | ✔ | ✘ | ✘ |
+| Lớp học | Xem | ✔ | ✔ | ✔ |
+| | Thêm / Sửa | ✔ | ✔ | ✘ |
+| | Xóa | ✔ | ✘ | ✘ |
+| Sinh viên | Xem | ✔ (tất cả) | ✔ (tất cả) | ✔ **chỉ hồ sơ của mình** |
+| | Thêm / Sửa | ✔ | ✔ | ✘ |
+| | Xóa | ✔ | ✘ | ✘ |
+| Niên khóa | Xem | ✔ | ✔ | ✔ |
+| | Thêm / Sửa / Xóa | ✔ | ✘ | ✘ |
+| Tài liệu | Xem / Tải xuống | ✔ | ✔ | ✔ |
+| | Tải lên | ✔ | ✔ | ✘ |
+| | Xóa | ✔ | ✘ | ✘ |
+
+**Phạm vi dữ liệu của STUDENT:** STUDENT chỉ thấy hồ sơ sinh viên có **email trùng với email tài khoản**
+(không phân biệt hoa thường). Xem hồ sơ khác trả **403**. Xử lý tại `security/scope/StudentDataScope`
+và `StudentServiceImpl`.
+
+---
+
+## 7. Một số quy tắc nghiệp vụ
+
+- **Lớp học:** mã lớp là UUID do máy chủ tự sinh. Form tạo mới không có ô nhập mã; khi sửa, mã chỉ đọc.
+  Tên lớp không trùng (không phân biệt hoa thường).
+- **Khoa / Niên khóa:** mã không trùng; niên khóa phải có năm kết thúc ≥ năm bắt đầu, năm trong khoảng 1900–2100.
+- **Sinh viên:** email không trùng; ngày sinh phải ở quá khứ; không xóa được khoa còn sinh viên (409).
+- **Tài liệu:** chỉ nhận `pdf, doc, docx, xls, xlsx, jpg, jpeg`; tối đa 10 MB/tệp, 50 MB/lần.
+  Tải lên trùng tên trong cùng mã hồ sơ sẽ tạo **phiên bản mới**; bản cũ chuyển sang không hoạt động.
+  Xóa là **xóa mềm** (đánh dấu `DELETED`), tệp vẫn được giữ trong MinIO.
+
+---
+
+## 8. Kiểm thử và chất lượng
+
+```powershell
+# Toàn bộ test + báo cáo coverage (target/site/jacoco/index.html)
+.\mvnw.cmd clean verify
+
+# Phân tích SonarQube (SonarQube chạy tại 127.0.0.1:9000)
+.\mvnw.cmd sonar:sonar "-Dsonar.projectKey=QuanLySinhVien_HibernateDAO" "-Dsonar.host.url=http://127.0.0.1:9000" "-Dsonar.token=<TOKEN>"
+```
+
+Test dùng profile `test` với H2 trong bộ nhớ, **không cần MySQL hay MinIO**.
+
+Kết quả lần chạy ngày 02/11/2026:
+
+| Hạng mục | Kết quả |
+|---|---|
+| JUnit | 851 test, 0 lỗi |
+| JaCoCo | 95,8% instruction, 87,6% branch |
+| SonarQube | Quality Gate **Passed**; coverage 92,9%; trùng lặp 1,2%; 0 bug, 0 lỗ hổng, 0 code smell, 0 security hotspot |
+
+---
+
+## 9. Rủi ro và giới hạn đã biết
+
+1. **Đăng ký công khai + khớp theo email:** ai cũng tự đăng ký được tài khoản STUDENT và email chưa được xác minh.
+   Người đăng ký bằng email của một sinh viên khác sẽ xem được hồ sơ của sinh viên đó.
+   Hướng khắc phục: đóng đăng ký công khai, hoặc thêm bước xác minh email.
+2. **Xóa mềm tài liệu:** bản ghi chỉ được đánh dấu xóa và tệp vẫn nằm trong MinIO. Cần dọn định kỳ nếu muốn giải phóng dung lượng.
+3. **`SecurityConfig` dùng `anyRequest().permitAll()`:** các đường dẫn `/api/...` hiện có đều đã khai báo yêu cầu đăng nhập,
+   nhưng endpoint mới thêm sau này phải được khai báo thêm, nếu không sẽ mặc định mở.
+4. **Mã trạng thái khi xóa chưa thống nhất:** xóa Lớp trả `200` kèm thông báo; xóa Khoa, Sinh viên, Niên khóa, Tài liệu trả `204`.

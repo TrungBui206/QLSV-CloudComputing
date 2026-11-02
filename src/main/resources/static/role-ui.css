@@ -1,0 +1,9 @@
+
+body:not([data-role-ui-ready="yes"]) #addBtn,
+body:not([data-role-ui-ready="yes"]) .act {
+    display: none !important;
+}
+
+[hidden] {
+    display: none !important;
+}
