@@ -8,6 +8,7 @@ import hd.quanlysinhvien_hibernatedao.dto.response.StudentResponse;
 import hd.quanlysinhvien_hibernatedao.entity.Department;
 import hd.quanlysinhvien_hibernatedao.entity.Student;
 import hd.quanlysinhvien_hibernatedao.mapper.StudentMapper;
+import hd.quanlysinhvien_hibernatedao.security.scope.StudentDataScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -37,6 +39,10 @@ class StudentServiceImplTest {
     @Mock
     private IDepartmentDao departmentDao;
 
+    // Mac dinh tra Optional.empty() => khong gioi han (ADMIN/LECTURER)
+    @Mock
+    private StudentDataScope studentDataScope;
+
     private final StudentMapper studentMapper =
             Mappers.getMapper(StudentMapper.class);
 
@@ -48,7 +54,7 @@ class StudentServiceImplTest {
     @BeforeEach
     void setUp() {
         studentService = new StudentServiceImpl(
-                studentDao, departmentDao, studentMapper
+                studentDao, departmentDao, studentMapper, studentDataScope
         );
 
         department = new Department();
@@ -69,6 +75,141 @@ class StudentServiceImplTest {
                 LocalDate.of(2004, 1, 15),
                 10L
         );
+    }
+
+    // ==========================================
+    // PHAM VI DU LIEU CUA STUDENT
+    // ==========================================
+
+    private void loginAsStudentWithEmail(String email) {
+        when(studentDataScope.restrictedEmail())
+                .thenReturn(Optional.of(email));
+    }
+
+    @Test
+    void findAll_studentScope_returnsOnlyOwnProfile() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        List<StudentResponse> result = studentService.findAll();
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).id());
+        verify(studentDao, never()).getAll();
+    }
+
+    @Test
+    void findAll_studentScope_noMatchingProfile_returnsEmpty() {
+        loginAsStudentWithEmail("other@example.com");
+        when(studentDao.findByEmailIgnoreCase("other@example.com"))
+                .thenReturn(Optional.empty());
+
+        assertTrue(studentService.findAll().isEmpty());
+        verify(studentDao, never()).getAll();
+    }
+
+    @Test
+    void search_studentScope_nameKeywordAndDepartmentMatch() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        PageResponse<StudentResponse> result =
+                studentService.search("NGUYEN", 10L, 0, 10, "name", "asc");
+
+        assertEquals(1, result.content().size());
+        assertEquals(1L, result.totalElements());
+        verify(studentDao, never()).search(any(), any(), any());
+    }
+
+    @Test
+    void search_studentScope_emailKeywordMatches() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        PageResponse<StudentResponse> result =
+                studentService.search("example.com", null, 0, 10, "id", "asc");
+
+        assertEquals(1, result.content().size());
+    }
+
+    @Test
+    void search_studentScope_keywordNotMatching_returnsEmpty() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        PageResponse<StudentResponse> result =
+                studentService.search("tran", null, 0, 10, "id", "asc");
+
+        assertTrue(result.content().isEmpty());
+        assertEquals(0L, result.totalElements());
+    }
+
+    @Test
+    void search_studentScope_otherDepartment_returnsEmpty() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        PageResponse<StudentResponse> result =
+                studentService.search("", 99L, 0, 10, "id", "asc");
+
+        assertTrue(result.content().isEmpty());
+    }
+
+    @Test
+    void search_studentScope_secondPage_isEmpty() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        PageResponse<StudentResponse> result =
+                studentService.search("", null, 1, 10, "id", "asc");
+
+        assertTrue(result.content().isEmpty());
+        assertEquals(1L, result.totalElements());
+    }
+
+    @Test
+    void findById_studentScope_ownProfile_success() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        assertEquals(1L, studentService.findById(1L).id());
+        verify(studentDao, never()).get(any());
+    }
+
+    @Test
+    void findById_studentScope_otherProfile_forbidden() {
+        loginAsStudentWithEmail("student@example.com");
+        when(studentDao.findByEmailIgnoreCase("student@example.com"))
+                .thenReturn(Optional.of(student));
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> studentService.findById(2L)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
+        verify(studentDao, never()).get(any());
+    }
+
+    @Test
+    void findById_studentScope_noLinkedProfile_forbidden() {
+        loginAsStudentWithEmail("nobody@example.com");
+        when(studentDao.findByEmailIgnoreCase("nobody@example.com"))
+                .thenReturn(Optional.empty());
+
+        ResponseStatusException ex = assertThrows(
+                ResponseStatusException.class,
+                () -> studentService.findById(1L)
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, ex.getStatusCode());
     }
 
     @Test

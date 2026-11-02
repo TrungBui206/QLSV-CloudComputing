@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,6 +34,20 @@ public class GlobalExceptionHandler {
         return buildResponse(
                 HttpStatus.NOT_FOUND,
                 ex.getMessage(),
+                request
+        );
+    }
+
+    // Đường dẫn/tài nguyên tĩnh không tồn tại (vd: /favicon.ico, /abc.html).
+    // Nếu không bắt riêng, ngoại lệ này rơi xuống handleGeneral và bị trả nhầm 500.
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleNoResource(
+            NoResourceFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                "Không tìm thấy tài nguyên",
                 request
         );
     }

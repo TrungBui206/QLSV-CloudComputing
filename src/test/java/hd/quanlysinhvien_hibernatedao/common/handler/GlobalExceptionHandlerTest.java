@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -82,6 +83,21 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.path")
                         .value("/test/errors/not-found"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
+    }
+
+    @Test
+    void noResourceFound_returns404() throws Exception {
+
+        mockMvc.perform(
+                        get("/test/errors/no-resource")
+                )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message")
+                        .value("Không tìm thấy tài nguyên"))
+                .andExpect(jsonPath("$.path")
+                        .value("/test/errors/no-resource"));
     }
 
     // ==========================================
@@ -361,13 +377,20 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/errors/{type}")
         public void throwException(
                 @PathVariable("type") String type
-        ) {
+        ) throws NoResourceFoundException {
 
             switch (type) {
 
                 case "not-found" ->
                         throw new ResourceNotFoundException(
                                 "Không tìm thấy khoa"
+                        );
+
+                // Mock để không phụ thuộc chữ ký constructor
+                // của NoResourceFoundException giữa các phiên bản Spring
+                case "no-resource" ->
+                        throw org.mockito.Mockito.mock(
+                                NoResourceFoundException.class
                         );
 
                 case "duplicate" ->

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quản lý lớp học</title>
+    <link rel="stylesheet" href="role-ui.css">
 
     <style>
         * {
@@ -234,6 +235,10 @@
             font-size: 14px;
         }
 
+        dialog label[hidden] {
+            display: none;
+        }
+
         dialog input,
         dialog textarea {
             display: block;
@@ -370,15 +375,16 @@
 
         <h3 id="dlgTitle"></h3>
 
-        <label>
+        <!-- Mã lớp (UUID) do máy chủ tự sinh: chỉ hiện khi sửa, luôn chỉ đọc. -->
+        <label id="fIdRow" hidden>
             Mã định danh lớp
 
             <input id="fId"
-                   maxlength="100"
-                   required>
+                   maxlength="36"
+                   disabled>
 
             <div class="hint">
-                Mã dùng để phân biệt các lớp trong hệ thống.
+                Mã do hệ thống tự sinh, không thể chỉnh sửa.
             </div>
         </label>
 
@@ -395,7 +401,7 @@
             Lĩnh vực
 
             <input id="fDomain"
-                   maxlength="150"
+                   maxlength="120"
                    placeholder="Ví dụ: Khoa học máy tính"
                    required>
         </label>
@@ -405,6 +411,7 @@
 
             <textarea id="fDesc"
                       rows="3"
+                      maxlength="1000"
                       placeholder="Nhập mô tả lớp học"></textarea>
         </label>
 
@@ -426,7 +433,7 @@
 </dialog>
 
 <script src="menu.js"></script>
-<script src="/role-ui.js?v=2"></script>
+<script src="role-ui.js"></script>
 <script>
     const BASE = '/api/classes';
 
@@ -984,11 +991,12 @@
             ? 'Cập nhật thông tin lớp học'
             : 'Thêm lớp học mới';
 
+        // Mã lớp (UUID) do máy chủ tự sinh: chỉ hiện khi sửa và luôn chỉ đọc
+        // (ô #fId có thuộc tính disabled ngay trong HTML).
+        $('fIdRow').hidden = !item;
+
         $('fId').value =
             item ? item.id : '';
-
-        $('fId').disabled =
-            Boolean(item);
 
         $('fName').value =
             item ? item.name : '';
@@ -1014,26 +1022,24 @@
     $('frm').onsubmit = async event => {
         event.preventDefault();
 
-        const id = $('fId').value.trim();
         const name = $('fName').value.trim();
         const domain = $('fDomain').value.trim();
         const description = $('fDesc').value.trim();
 
-        if (!id || !name || !domain) {
+        if (!name || !domain) {
             $('fErr').textContent =
-                'Vui lòng nhập đầy đủ mã định danh, tên lớp và lĩnh vực';
+                'Vui lòng nhập đầy đủ tên lớp và lĩnh vực';
 
             return;
         }
 
-        const body = {
-            id,
-            name,
-            domain,
-            description
-        };
-
         const isEdit = editingId !== null;
+
+        // Tạo mới: KHÔNG gửi id vì máy chủ tự sinh UUID (ClassInfoMapper bỏ qua id).
+        // Cập nhật: gửi id của lớp đang sửa để khớp với id trên URL.
+        const body = isEdit
+            ? { id: editingId, name, domain, description }
+            : { name, domain, description };
 
         const url = isEdit
             ? API.update(editingId)

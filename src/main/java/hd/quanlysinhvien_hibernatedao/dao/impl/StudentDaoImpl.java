@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -85,6 +87,30 @@ public class StudentDaoImpl
                 .getSingleResult();
 
         return count > 0;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Student> findByEmailIgnoreCase(String email) {
+
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
+
+        // JOIN FETCH department vi mapper can ten khoa
+        String jpql =
+                "SELECT s FROM Student s "
+                        + "JOIN FETCH s.department "
+                        + "WHERE LOWER(s.email) = :email";
+
+        return getEntityManager()
+                .createQuery(jpql, Student.class)
+                .setParameter(
+                        "email",
+                        email.trim().toLowerCase(Locale.ROOT)
+                )
+                .getResultStream()
+                .findFirst();
     }
 
     @Override

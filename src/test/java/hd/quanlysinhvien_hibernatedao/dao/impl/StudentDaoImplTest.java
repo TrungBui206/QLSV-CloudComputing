@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -76,6 +77,37 @@ class StudentDaoImplTest {
         entityManager.clear();
 
         return id;
+    }
+
+    @Test
+    void findByEmailIgnoreCase_found() {
+        Long departmentId = saveDepartment(
+                "SCP",
+                "Scope Department"
+        );
+
+        Long studentId = saveStudent(
+                "Scope Student",
+                "Scope.Student@Example.com",
+                departmentId
+        );
+
+        Optional<Student> result =
+                studentDao.findByEmailIgnoreCase("  scope.student@example.COM ");
+
+        assertTrue(result.isPresent());
+        assertEquals(studentId, result.get().getId());
+        assertEquals(
+                "Scope Department",
+                result.get().getDepartment().getName()
+        );
+    }
+
+    @Test
+    void findByEmailIgnoreCase_notFoundOrBlank() {
+        assertTrue(studentDao.findByEmailIgnoreCase("nobody@example.com").isEmpty());
+        assertTrue(studentDao.findByEmailIgnoreCase("   ").isEmpty());
+        assertTrue(studentDao.findByEmailIgnoreCase(null).isEmpty());
     }
 
     @Test
