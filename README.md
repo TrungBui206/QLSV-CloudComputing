@@ -10,7 +10,7 @@ xác thực bằng JWT và phân quyền theo 3 vai trò ADMIN / LECTURER / STUD
 
 | Thành phần | Công nghệ |
 |---|---|
-| Ngôn ngữ / build | Java 21, Maven (dùng `mvnw.cmd` có sẵn) |
+| Ngôn ngữ / build | Java 21, Maven (dùng Maven Wrapper có sẵn: `mvnw.cmd` trên Windows, `./mvnw` trên macOS/Linux) |
 | Framework | Spring Boot 4.1.1 (Web MVC, Data JPA, Validation, Security) |
 | Truy cập dữ liệu | Hibernate DAO tự viết (`IGenericDao`, `HibernateGenericDao`, `HibernatePaginationSortingDao`) |
 | CSDL | MySQL (chạy thật), H2 (chỉ dùng khi chạy test) |
@@ -82,6 +82,10 @@ Tạo nhanh một `AUTH_JWT_SECRET` hợp lệ bằng PowerShell:
 ```powershell
 [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
 ```
+macOS / Linux:
+```bash
+openssl rand -base64 32
+```
 
 > Không đưa mật khẩu, khóa hay token thật vào mã nguồn hoặc README.
 
@@ -92,7 +96,10 @@ Tạo nhanh một `AUTH_JWT_SECRET` hợp lệ bằng PowerShell:
 - **IntelliJ:** chạy lớp `QuanLySinhVienHibernateDaoApplication` (đã khai báo biến môi trường).
 - **Dòng lệnh:**
   ```powershell
-  .\mvnw.cmd spring-boot:run
+  .\mvnw.cmd spring-boot:run      # Windows
+  ```
+  ```bash
+  ./mvnw spring-boot:run          # macOS / Linux
   ```
 
 Sau khi thấy `Started QuanLySinhVienHibernateDaoApplication`:
@@ -111,7 +118,10 @@ Không cần cài JDK, MySQL hay MinIO, chỉ cần **Docker Desktop**. `docker-
 
 1. Tạo file cấu hình từ mẫu rồi điền giá trị thật (**không commit `.env`**):
    ```powershell
-   copy .env.example .env
+   copy .env.example .env      # Windows (PowerShell)
+   ```
+   ```bash
+   cp .env.example .env        # macOS / Linux
    ```
    - `DB_HOST` giữ là `mysql` (tên service trong compose). `DB_USER` **không** được là `root`.
    - `AUTH_JWT_SECRET`: chuỗi Base64 ≥ 32 byte (lệnh tạo ở mục 3).
@@ -129,6 +139,13 @@ Không cần cài JDK, MySQL hay MinIO, chỉ cần **Docker Desktop**. `docker-
 **Dữ liệu mẫu:** các file trong `db/init/` (`01-schema.sql`, `02-data.sql`) được MySQL nạp **tự động ở lần khởi tạo đầu tiên**
 (khi volume `mysql-db` còn trống). Tài khoản `admin`/`lecturer` trong dữ liệu mẫu đã có sẵn nên app không tạo lại;
 hỏi người giữ dữ liệu mẫu để biết mật khẩu. Muốn nạp lại từ đầu: `docker compose down -v` rồi `up` lại.
+
+**macOS:**
+- Cài **Docker Desktop for Mac** đúng chip (Apple Silicon hoặc Intel), mở Docker Desktop trước khi chạy lệnh.
+- Đặt project trong thư mục người dùng (`/Users/<tên>/...`): Docker Desktop mặc định chỉ cho container đọc thư mục trong `/Users`, cần cho volume `./db/init`.
+- Các lệnh `docker compose ...` giống hệt Windows; chạy trong Terminal hoặc Terminal của IntelliJ.
+- Nếu `./mvnw` báo `permission denied` (bản clone cũ): chạy `chmod +x mvnw` một lần.
+- Nếu một image báo không có bản cho kiến trúc máy (`no matching manifest for linux/arm64`), thêm `platform: linux/amd64` vào service đó trong `docker-compose.yml` (chạy giả lập, chậm hơn).
 
 **Lưu ý:**
 - Image `minio/minio` đã bị gỡ khỏi Docker Hub (09/2026), compose dùng `cgr.dev/chainguard/minio:latest`.
@@ -198,7 +215,7 @@ và `StudentServiceImpl`.
 
 ```powershell
 # Toàn bộ test + báo cáo coverage (target/site/jacoco/index.html)
-.\mvnw.cmd clean verify
+.\mvnw.cmd clean verify        # Windows; macOS/Linux: ./mvnw clean verify
 
 # Phân tích SonarQube (SonarQube chạy tại 127.0.0.1:9000)
 .\mvnw.cmd sonar:sonar "-Dsonar.projectKey=QuanLySinhVien_HibernateDAO" "-Dsonar.host.url=http://127.0.0.1:9000" "-Dsonar.token=<TOKEN>"
