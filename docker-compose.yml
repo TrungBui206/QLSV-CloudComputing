@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - mysql-db:/var/lib/mysql
+      # Moi file .sql trong db/init duoc nap TU DONG khi volume con trong (lan khoi tao dau tien)
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Không publish cổng 3306 ra ngoài; app truy cập qua mạng nội bộ của compose
+
+  minio:
+    # minio/minio da bi go khoi Docker Hub (09/2026); dung ban build cua Chainguard
+    image: cgr.dev/chainguard/minio:latest
+    user: "0:0"   # image mac dinh chay UID 65532, can root de ghi vao volume
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9001:9001"   # MinIO Console (chỉ để xem khi demo local)
+
+  app:
+    build: .
+    image: qlsv-app:v1.0
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    ports:
+      - "${SERVER_PORT:-8082}:${SERVER_PORT:-8082}"
+
+volumes:
+  mysql-db:
+  minio-data:
