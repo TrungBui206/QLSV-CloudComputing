@@ -104,6 +104,39 @@ Sau khi thấy `Started QuanLySinhVienHibernateDaoApplication`:
 
 ---
 
+## 4b. Chạy bằng Docker (môn Cloud Computing, nhánh `cloud`)
+
+Không cần cài JDK, MySQL hay MinIO, chỉ cần **Docker Desktop**. `docker-compose.yml` chạy 3 container:
+`app` (image build từ `Dockerfile`), `mysql` (MySQL 8.4) và `minio`.
+
+1. Tạo file cấu hình từ mẫu rồi điền giá trị thật (**không commit `.env`**):
+   ```powershell
+   copy .env.example .env
+   ```
+   - `DB_HOST` giữ là `mysql` (tên service trong compose). `DB_USER` **không** được là `root`.
+   - `AUTH_JWT_SECRET`: chuỗi Base64 ≥ 32 byte (lệnh tạo ở mục 3).
+   - `MINIO_SECRET_KEY` ≥ 8 ký tự; mật khẩu bootstrap 12–72 ký tự.
+2. Build và chạy:
+   ```powershell
+   docker compose up -d --build
+   docker compose logs -f app      # đợi "Started QuanLySinhVienHibernateDaoApplication"
+   ```
+3. Kiểm tra:
+   - http://localhost:8082/health → `{"status":"UP"}`
+   - http://localhost:8082/login.html
+4. Dừng: `docker compose down` (giữ dữ liệu) hoặc `docker compose down -v` (xóa cả dữ liệu).
+
+**Dữ liệu mẫu:** các file trong `db/init/` (`01-schema.sql`, `02-data.sql`) được MySQL nạp **tự động ở lần khởi tạo đầu tiên**
+(khi volume `mysql-db` còn trống). Tài khoản `admin`/`lecturer` trong dữ liệu mẫu đã có sẵn nên app không tạo lại;
+hỏi người giữ dữ liệu mẫu để biết mật khẩu. Muốn nạp lại từ đầu: `docker compose down -v` rồi `up` lại.
+
+**Lưu ý:**
+- Image `minio/minio` đã bị gỡ khỏi Docker Hub (09/2026), compose dùng `cgr.dev/chainguard/minio:latest`.
+- Tài liệu trong dữ liệu mẫu chỉ có metadata; file thật không có trong MinIO mới nên tải xuống sẽ lỗi. Tải lên file mới để thử.
+- Bản Docker và bản chạy bằng IntelliJ dùng **hai database khác nhau** và cùng cổng 8082: không chạy cả hai cùng lúc.
+
+---
+
 ## 5. Tài khoản thử nghiệm
 
 | Vai trò | Cách có tài khoản |
