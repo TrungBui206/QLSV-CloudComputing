@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -98,6 +99,20 @@ class GlobalExceptionHandlerTest {
                         .value("Không tìm thấy tài nguyên"))
                 .andExpect(jsonPath("$.path")
                         .value("/test/errors/no-resource"));
+    }
+
+    @Test
+    void methodNotSupported_returns405() throws Exception {
+
+        mockMvc.perform(
+                        get("/test/errors/method-not-supported")
+                )
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.message")
+                        .value("Phương thức DELETE không được hỗ trợ cho đường dẫn này"))
+                .andExpect(jsonPath("$.path")
+                        .value("/test/errors/method-not-supported"));
     }
 
     // ==========================================
@@ -377,7 +392,7 @@ class GlobalExceptionHandlerTest {
         @GetMapping("/errors/{type}")
         public void throwException(
                 @PathVariable("type") String type
-        ) throws NoResourceFoundException {
+        ) throws NoResourceFoundException, HttpRequestMethodNotSupportedException {
 
             switch (type) {
 
@@ -391,6 +406,11 @@ class GlobalExceptionHandlerTest {
                 case "no-resource" ->
                         throw org.mockito.Mockito.mock(
                                 NoResourceFoundException.class
+                        );
+
+                case "method-not-supported" ->
+                        throw new HttpRequestMethodNotSupportedException(
+                                "DELETE"
                         );
 
                 case "duplicate" ->
