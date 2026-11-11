@@ -140,6 +140,20 @@ Không cần cài JDK, MySQL hay MinIO, chỉ cần **Docker Desktop**. `docker-
 (khi volume `mysql-db` còn trống). Tài khoản demo và mật khẩu: xem mục 5.
 Muốn nạp lại từ đầu: `docker compose down -v` (xóa cả dữ liệu đang có) rồi `up` lại.
 
+**Không đăng nhập được bằng tài khoản demo?** Thường do máy đã chạy Docker từ trước khi repo có dữ liệu demo:
+volume `mysql-db` đã có dữ liệu nên MySQL **không** nạp lại `db/init/`, và tài khoản `admin` trong đó mang mật khẩu
+`APP_BOOTSTRAP_ADMIN_PASSWORD` của file `.env` trên máy đó. `git pull` thôi chưa đủ. Cách sửa (xóa dữ liệu local, nạp lại dữ liệu demo):
+```powershell
+git checkout cloud
+git pull
+scripts\reset-local-db.cmd       # Windows
+```
+```bash
+bash scripts/reset-local-db.sh   # macOS / Linux
+```
+Script hỏi xác nhận (gõ `YES`), chạy `docker compose down -v` rồi `up -d --build` và chờ `/health` sẵn sàng.
+Sau đó mọi máy đăng nhập bằng cùng tài khoản ở mục 5. Không cần gửi mật khẩu hay hash cho nhau.
+
 **Log request:** mỗi request được ghi một dòng `METHOD /đường-dẫn -> mã trạng thái (thời gian ms)` vào log ứng dụng
 (`docker compose logs app`), không ghi query string hay body. File tĩnh và Swagger được bỏ qua.
 
