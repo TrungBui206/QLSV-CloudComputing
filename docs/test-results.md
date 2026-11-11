@@ -1,17 +1,21 @@
 # Kết quả kiểm thử
 
-Môi trường: Docker local (`docker compose up -d --build`), dữ liệu demo `db/init/`, ngày 10/11/2026.
-Bản cloud: Người 4 bổ sung sau khi triển khai.
+| Môi trường | Mô tả | Ngày |
+|---|---|---|
+| Local | Docker Desktop (`docker compose up -d --build`), dữ liệu demo `db/init/` | 10–11/11/2026 |
+| Cloud | AWS EC2 `c7i-flex.large`, Ubuntu 24.04, Sydney; truy cập từ máy ngoài qua `http://<IP công khai>` | 12/11/2026 |
+
+IP công khai đổi sau mỗi lần Start VM (lúc kiểm thử: `15.135.192.242`). Chi tiết T3, T4: [`database-test-results.md`](database-test-results.md).
 
 | Mã | Tình huống | Kết quả mong đợi | Local | Cloud | Minh chứng |
 |---|---|---|---|---|---|
-| T1 | Mở URL công khai | Trang web hiển thị bình thường | — | | |
-| T2 | Đăng ký và đăng nhập | Người dùng truy cập được chức năng cá nhân | Đạt (3 tài khoản demo) | | |
-| T3 | Thêm, sửa, xóa | Dữ liệu thay đổi đúng trong database | | | |
-| T4 | Khởi động lại ứng dụng | Dữ liệu vẫn còn | | | |
-| T5 | Gọi `/health` | Trả về trạng thái thành công | Đạt (`{"status":"UP"}`) | | |
-| T6 | Gửi dữ liệu không hợp lệ | Báo lỗi phù hợp, không bị dừng | Đạt (chi tiết bên dưới) | | |
-| T7 | Xem log | Tìm được request hoặc lỗi thử nghiệm | | | |
+| T1 | Mở URL công khai | Trang web hiển thị bình thường | — | Đạt: `/login.html` trả 200, tiêu đề "Đăng nhập - Quản lý sinh viên" | Ảnh trang đăng nhập trên IP công khai |
+| T2 | Đăng ký và đăng nhập | Người dùng truy cập được chức năng cá nhân | Đạt (3 tài khoản demo) | Đạt: `admin`, `lecturer`, `student01` đăng nhập 200; admin thấy 18 sinh viên; `student01` thấy 1 hồ sơ, xem hồ sơ mình 200, hồ sơ khác 403 | Ảnh 3 vai trò |
+| T3 | Thêm, sửa, xóa | Dữ liệu thay đổi đúng trong database | Đạt | Đạt: thêm 201, sửa 200, xóa 204; SQL trên server khớp | `database-test-results.md` |
+| T4 | Khởi động lại ứng dụng | Dữ liệu vẫn còn | Đạt (restart app) | Đạt: restart container app và reboot cả VM, dữ liệu còn nguyên | `database-test-results.md` |
+| T5 | Gọi `/health` | Trả về trạng thái thành công | Đạt (`{"status":"UP"}`) | Đạt (`{"status":"UP"}`), cả sau reboot VM | Ảnh `/health` |
+| T6 | Gửi dữ liệu không hợp lệ | Báo lỗi phù hợp, không bị dừng | Đạt (13 ca, bên dưới) | Đạt: chạy lại ca 1–5, 8, 11–13, kết quả giống local; `/health` vẫn UP | Bảng T6 |
+| T7 | Xem log | Tìm được request hoặc lỗi thử nghiệm | Đạt (`docker compose logs app`) | Đạt: tìm thấy `GET /api/students/999999 -> 404` và `DELETE /api/students/19 -> 204` trên **CloudWatch Logs** (`/qlsv/app`) | `monitoring.md`, ảnh CloudWatch |
 
 ## T2: tài khoản demo (local)
 
@@ -21,7 +25,7 @@ Bản cloud: Người 4 bổ sung sau khi triển khai.
 | `lecturer` | 200 | |
 | `student01` | 200 | `GET /api/students` chỉ trả 1 hồ sơ (Nguyễn Văn An); xem hồ sơ của mình 200, hồ sơ người khác 403 |
 
-## T6: dữ liệu không hợp lệ (local)
+## T6: dữ liệu không hợp lệ (local; trên cloud chạy lại ca 1–5, 8, 11–13 cho kết quả giống hệt)
 
 Gọi API bằng tài khoản `admin` (trừ các ca đăng ký/đăng nhập). Sau toàn bộ các ca, `/health` vẫn trả `UP`.
 

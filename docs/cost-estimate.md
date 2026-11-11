@@ -1,38 +1,43 @@
 # Dự toán chi phí 1 tháng
 
-Theo bài giảng Cloud Database (mục 13.2): chi phí = compute theo thời gian chạy + storage + backup ngoài phần được bao gồm + IP/truyền dữ liệu và khoản khác. Giá và chính sách miễn phí phải tra tại thời điểm tạo tài nguyên.
+Theo bài giảng Cloud Database (mục 13.2): chi phí = compute theo thời gian chạy + storage + backup ngoài phần được bao gồm + IP/truyền dữ liệu và khoản khác.
 
-**Nền tảng:** AWS (tài khoản Free plan: credit $100 + tối đa $100, 6 tháng)  **Region:** Asia Pacific (Sydney) `ap-southeast-2`  **Ngày tra cứu giá:** 11/11/2026  **Người tra cứu:** _(điền)_
+**Nền tảng:** AWS (tài khoản Free plan: credit 100 USD + tối đa 100 USD, 6 tháng)  **Region:** Asia Pacific (Sydney) `ap-southeast-2`
+**Ngày tra cứu giá:** 12/11/2026, bằng AWS Pricing API (`aws pricing get-products`) và trang giá AWS  **Người tra cứu:** _(điền)_
 
 ## Giả định
 
 | Giả định | Giá trị |
 |---|---|
-| Số giờ VM chạy / tháng | 730 giờ (chạy liên tục) — hoặc ghi số giờ thực tế nếu tắt VM khi không dùng |
+| Loại VM | EC2 `c7i-flex.large` (2 vCPU, 4 GB RAM), Linux, on-demand |
+| Ổ đĩa | 1 volume EBS gp3 30 GB (gốc của VM, chứa cả volume Docker) |
+| Số giờ VM chạy / tháng | Kịch bản A: 730 giờ (chạy liên tục). Kịch bản B: khoảng 40 giờ (chỉ bật khi demo/kiểm thử) |
 | Dung lượng dữ liệu (MySQL + MinIO) | < 1 GB (dữ liệu demo) |
-| Lưu lượng ra Internet | < 5 GB / tháng (demo, chấm bài) |
-| Backup | Script `mysqldump` lưu trên chính VM (không tính thêm) |
-| Số IP công khai | 1 |
+| Lưu lượng ra Internet | < 5 GB / tháng, nằm trong 100 GB miễn phí mỗi tháng của AWS |
+| Log CloudWatch | < 100 MB / tháng, giữ 7 ngày, nằm trong mức miễn phí 5 GB |
+| Sao lưu | `scripts/backup.sh` lưu trên chính VM (không tính thêm) |
+| IP công khai | 1 IPv4 tự cấp (đổi mỗi lần Start), chỉ tính khi đang gắn với VM đang chạy |
 
 ## Bảng chi phí
 
-| Hạng mục | Cấu hình | Đơn giá | Số lượng | Thành tiền (USD) | Nguồn đơn giá |
-|---|---|---|---|---|---|
-| Compute (VM) | EC2 `c7i-flex.large` (2 vCPU / 4 GB), Linux | 0.11072 USD/giờ | 730 giờ | 80.83 | Bảng giá hiển thị khi tạo instance trên EC2 console |
-| Ổ đĩa | _(loại, 30 GB)_ | _(USD/GB-tháng)_ | 30 GB | | |
-| IP công khai | 1 địa chỉ IPv4 | 0.005 USD/giờ _(xác nhận lại)_ | 730 giờ | 3.65 | https://aws.amazon.com/vpc/pricing/ |
-| Truyền dữ liệu ra Internet | | _(USD/GB)_ | 5 GB | | |
-| **Tổng trước credit** | | | | | |
-| Credit / gói miễn phí áp dụng | Credit Free plan của AWS | | | _(trừ)_ | |
-| **Tổng phải trả** | | | | | |
+| Hạng mục | Đơn giá | Kịch bản A (730 giờ) | Kịch bản B (40 giờ) | Nguồn |
+|---|---|---|---|---|
+| EC2 `c7i-flex.large` | 0,11072 USD/giờ | 80,83 | 4,43 | AWS Pricing API |
+| EBS gp3 30 GB | 0,096 USD/GB-tháng | 2,88 | 2,88 (vẫn tính khi VM tắt) | AWS Pricing API |
+| IPv4 công khai | 0,005 USD/giờ | 3,65 | 0,20 | https://aws.amazon.com/vpc/pricing/ |
+| Truyền dữ liệu ra Internet | 100 GB đầu miễn phí | 0 | 0 | https://aws.amazon.com/ec2/pricing/on-demand/ |
+| CloudWatch Logs | 5 GB đầu miễn phí | 0 | 0 | https://aws.amazon.com/cloudwatch/pricing/ |
+| **Tổng trước credit** | | **≈ 87,36 USD** | **≈ 7,51 USD** | |
+| Credit Free plan | | trừ vào credit | trừ vào credit | |
+| **Tiền thật phải trả** | | 0 khi còn credit | 0 khi còn credit | |
 
-Ghi chú: nếu chỉ bật máy khi cần (ví dụ 40 giờ/tháng) thì compute ≈ 40 × 0.11072 ≈ 4.43 USD; khi máy tắt vẫn tính ổ đĩa EBS.
+Nhóm dùng kịch bản B: chỉ Start VM khi demo/kiểm thử, Stop ngay sau đó.
 
 ## Kiểm soát chi phí
 
-- [ ] Đã tạo budget alert (ngưỡng: ____ USD), có ảnh chụp
-- [ ] Đã ghi ngày bắt đầu dùng credit và ngày hết hạn
-- [ ] Tắt VM khi không dùng lâu (lưu ý: IP công khai và ổ đĩa có thể vẫn tính phí khi VM tắt)
-- [ ] Sau khi chấm: xóa VM, ổ đĩa, IP, snapshot (README mục 4c.6)
+- [ ] Đã tạo budget alert (đề xuất ngưỡng 10 USD), có ảnh chụp: **chủ tài khoản AWS làm**
+- [ ] Ghi ngày bắt đầu dùng credit và ngày hết hạn
+- [x] Tắt VM khi không dùng (EBS vẫn tính khi VM tắt)
+- [ ] Sau khi chấm: xóa VM, ổ EBS, snapshot, log group `/qlsv/app`, IAM role `qlsv-ec2-logs`, deploy key GitHub (README mục 4c.7)
 
 Ghi chú: budget alert chỉ là cảnh báo, không tự ngắt chi phí.
