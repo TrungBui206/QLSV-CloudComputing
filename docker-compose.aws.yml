@@ -1,0 +1,14 @@
+# Cấu hình bổ sung CHỈ dùng trên server AWS: gửi log của container app lên Amazon CloudWatch Logs.
+# Kích hoạt bằng cách thêm vào .env trên server:
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.aws.yml
+# Yêu cầu: EC2 gắn IAM role có quyền ghi log (ví dụ CloudWatchAgentServerPolicy)
+# và đã tạo log group /qlsv/app (README mục 4c).
+# Docker vẫn giữ bản sao log trên máy, nên `docker compose logs app` vẫn dùng được.
+services:
+  app:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-southeast-2
+        awslogs-group: /qlsv/app
+        awslogs-stream: app
