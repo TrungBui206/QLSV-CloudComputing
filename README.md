@@ -176,6 +176,7 @@ Sau đó mọi máy đăng nhập bằng cùng tài khoản ở mục 5. Không 
 Kiến trúc giai đoạn giữa kỳ: **một VM** chạy `docker compose` (app + MySQL + MinIO), chỉ mở cổng HTTP ra Internet.
 Cách làm không phụ thuộc nhà cung cấp (AWS, Azure, Google Cloud...): chỉ khác ở bước tạo VM và firewall.
 Sơ đồ: [`docs/architecture.md`](docs/architecture.md). Dự toán chi phí: [`docs/cost-estimate.md`](docs/cost-estimate.md).
+Database và lưu trữ: [`docs/database-storage.md`](docs/database-storage.md). Kết quả kiểm thử T1–T7: [`docs/test-results.md`](docs/test-results.md).
 
 ### 1. Tạo VM
 
@@ -246,17 +247,39 @@ Kiểm tra từ máy ngoài: `http://<IP-cong-khai>/health` trả `{"status":"UP
 |---|---|
 | Cập nhật bản mới từ nhánh `cloud` | `bash scripts/deploy.sh` (giữ nguyên dữ liệu) |
 | Trạng thái container | `docker compose ps` |
-| Xem log app (có log từng request) | `docker compose logs -f --tail 100 app` |
+| Xem log app (có log từng request) | `docker compose logs -f --tail 100 app` trên VM, hoặc CloudWatch → Log groups → `/qlsv/app` (mục 4c.6) |
 | Khởi động lại app (kiểm thử T4) | `docker compose restart app` |
+| Sao lưu database | `bash scripts/backup.sh` (file trong `backups/`, không commit) |
+| Khôi phục database | `bash scripts/restore.sh backups/<file>.sql` (vào DB thử `qlsv_restore_test`) hoặc `--main` (ghi đè DB chính, hỏi xác nhận) |
 | Xem MinIO Console | Trên máy cá nhân: `ssh -L 9001:127.0.0.1:9001 ubuntu@<IP>` rồi mở `http://localhost:9001` |
 | Dừng ứng dụng | `docker compose down` (giữ dữ liệu) |
 | Xóa sạch dữ liệu | `docker compose down -v` (**mất toàn bộ dữ liệu**, nạp lại dữ liệu demo ở lần chạy sau) |
 
 Log của Docker được giới hạn 3 file × 10 MB mỗi container để không làm đầy ổ đĩa VM.
 
-### 6. Dọn tài nguyên sau khi chấm
+### 6. Log trên CloudWatch (AWS)
 
-Xóa trên trang quản trị cloud: VM, ổ đĩa (volume/disk) gắn với VM, IP tĩnh (nếu có), snapshot/backup đã tạo, rồi xóa deploy key trên GitHub.
+Container `app` gửi log lên Amazon CloudWatch Logs bằng log driver `awslogs` (file `docker-compose.aws.yml`). Chi tiết: [`docs/monitoring.md`](docs/monitoring.md).
+Làm một lần (CloudShell hoặc AWS CLI):
+
+```bash
+R=qlsv-ec2-logs
+aws iam create-role --role-name $R --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
+aws iam attach-role-policy --role-name $R --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+aws iam create-instance-profile --instance-profile-name $R
+aws iam add-role-to-instance-profile --instance-profile-name $R --role-name $R
+aws logs create-log-group --log-group-name /qlsv/app
+aws logs put-retention-policy --log-group-name /qlsv/app --retention-in-days 7
+aws ec2 associate-iam-instance-profile --instance-id <ID-instance> --iam-instance-profile Name=$R
+```
+
+Trên VM, thêm vào `.env` rồi chạy lại: `echo 'COMPOSE_FILE=docker-compose.yml:docker-compose.aws.yml' >> .env && docker compose up -d`.
+Kiểm tra: `docker inspect -f '{{.HostConfig.LogConfig.Type}}' qlsv-app-1` trả `awslogs`.
+
+### 7. Dọn tài nguyên sau khi chấm
+
+Xóa trên trang quản trị cloud: VM, ổ đĩa (volume/disk) gắn với VM, IP tĩnh (nếu có), snapshot/backup đã tạo,
+log group `/qlsv/app`, IAM role và instance profile `qlsv-ec2-logs`, rồi xóa deploy key trên GitHub.
 Kiểm tra lại trang chi phí sau 1–2 ngày để chắc không còn tài nguyên tính phí.
 
 ---
