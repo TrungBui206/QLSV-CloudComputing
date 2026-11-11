@@ -157,6 +157,96 @@ Muốn nạp lại từ đầu: `docker compose down -v` (xóa cả dữ liệu 
 
 ---
 
+## 4c. Triển khai lên cloud (VM Ubuntu + Docker Compose)
+
+Kiến trúc giai đoạn giữa kỳ: **một VM** chạy `docker compose` (app + MySQL + MinIO), chỉ mở cổng HTTP ra Internet.
+Cách làm không phụ thuộc nhà cung cấp (AWS, Azure, Google Cloud...): chỉ khác ở bước tạo VM và firewall.
+Sơ đồ: [`docs/architecture.md`](docs/architecture.md). Dự toán chi phí: [`docs/cost-estimate.md`](docs/cost-estimate.md).
+
+### 1. Tạo VM
+
+| Thông số | Khuyến nghị |
+|---|---|
+| Hệ điều hành | Ubuntu Server 24.04 LTS (hoặc 22.04 LTS) |
+| CPU / RAM | 2 vCPU, **4 GB RAM** (app + MySQL + MinIO chạy cùng máy; VM 1–2 GB không đủ) |
+| Ổ đĩa | 20–30 GB |
+| Region | Nhóm đang dùng AWS Sydney (`ap-southeast-2`) |
+| Đăng nhập | SSH key (không dùng mật khẩu) |
+
+Nhóm đang dùng AWS EC2 `c7i-flex.large` (2 vCPU, 4 GB, thuộc gói Free Tier). Chỉ bật máy khi cần demo/kiểm thử; mỗi lần Start lại, IP công khai sẽ đổi.
+
+### 2. Firewall (Security Group / Network Security Group)
+
+| Cổng | Nguồn được phép | Mục đích |
+|---|---|---|
+| 22 (SSH) | Prefix list `com.amazonaws.ap-southeast-2.ec2-instance-connect` (mở terminal trên trình duyệt bằng EC2 Instance Connect) và/hoặc **IP của nhóm** (`<IP>/32`) | Quản trị |
+| 80 (HTTP) | `0.0.0.0/0` | Người dùng truy cập web |
+| 443 (HTTPS) | `0.0.0.0/0` | Chỉ khi làm HTTPS (điểm cộng cuối kỳ) |
+
+**Không mở** 3306 (MySQL), 9000/9001 (MinIO), 8082. MySQL và MinIO chỉ nói chuyện với app qua mạng nội bộ của compose.
+
+### 3. Cài Docker trên VM
+
+```bash
+ssh ubuntu@<IP-cong-khai>                 # user mặc định tùy image: ubuntu (AWS), azureuser (Azure)...
+sudo apt-get update && sudo apt-get install -y git
+```
+
+Repo là **private**, nên VM cần quyền đọc repo. Cách khuyên dùng là **deploy key chỉ đọc**:
+
+```bash
+ssh-keygen -t ed25519 -C "qlsv-vm" -f ~/.ssh/qlsv_deploy -N ""
+cat ~/.ssh/qlsv_deploy.pub
+```
+
+Chép khóa công khai vào GitHub: repo → **Settings → Deploy keys → Add deploy key**, **không** tick "Allow write access". Sau đó:
+
+```bash
+cat >> ~/.ssh/config <<'EOF'
+Host github.com
+  IdentityFile ~/.ssh/qlsv_deploy
+EOF
+git clone -b cloud git@github.com:TrungBui206/QLSV-CloudComputing.git qlsv
+cd qlsv
+bash scripts/server-setup.sh              # cài Docker Engine + Compose, tạo swap nếu RAM < 4 GB
+exit                                      # đăng xuất rồi SSH lại để dùng docker không cần sudo
+```
+
+### 4. Tạo cấu hình và triển khai
+
+```bash
+ssh ubuntu@<IP-cong-khai>
+cd qlsv
+bash scripts/gen-env.sh                   # tạo .env với mật khẩu ngẫu nhiên, PUBLIC_PORT=80
+bash scripts/deploy.sh                    # pull nhánh cloud, build, chạy, chờ /health = UP
+```
+
+Kiểm tra từ máy ngoài: `http://<IP-cong-khai>/health` trả `{"status":"UP"}`, rồi đăng nhập bằng tài khoản demo (mục 5).
+
+- `.env` chỉ nằm trên VM (quyền 600). Không commit, không chụp màn hình, không dùng lại mật khẩu ở máy cá nhân.
+- Dữ liệu demo trong `db/init/` được nạp ở lần chạy đầu (volume `mysql-db` còn trống).
+
+### 5. Vận hành
+
+| Việc | Lệnh (chạy trong thư mục `qlsv` trên VM) |
+|---|---|
+| Cập nhật bản mới từ nhánh `cloud` | `bash scripts/deploy.sh` (giữ nguyên dữ liệu) |
+| Trạng thái container | `docker compose ps` |
+| Xem log app (có log từng request) | `docker compose logs -f --tail 100 app` |
+| Khởi động lại app (kiểm thử T4) | `docker compose restart app` |
+| Xem MinIO Console | Trên máy cá nhân: `ssh -L 9001:127.0.0.1:9001 ubuntu@<IP>` rồi mở `http://localhost:9001` |
+| Dừng ứng dụng | `docker compose down` (giữ dữ liệu) |
+| Xóa sạch dữ liệu | `docker compose down -v` (**mất toàn bộ dữ liệu**, nạp lại dữ liệu demo ở lần chạy sau) |
+
+Log của Docker được giới hạn 3 file × 10 MB mỗi container để không làm đầy ổ đĩa VM.
+
+### 6. Dọn tài nguyên sau khi chấm
+
+Xóa trên trang quản trị cloud: VM, ổ đĩa (volume/disk) gắn với VM, IP tĩnh (nếu có), snapshot/backup đã tạo, rồi xóa deploy key trên GitHub.
+Kiểm tra lại trang chi phí sau 1–2 ngày để chắc không còn tài nguyên tính phí.
+
+---
+
 ## 5. Tài khoản thử nghiệm
 
 ### Khi chạy bằng Docker (dữ liệu demo trong `db/init/`)
