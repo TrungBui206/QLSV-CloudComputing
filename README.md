@@ -137,8 +137,11 @@ Không cần cài JDK, MySQL hay MinIO, chỉ cần **Docker Desktop**. `docker-
 4. Dừng: `docker compose down` (giữ dữ liệu) hoặc `docker compose down -v` (xóa cả dữ liệu).
 
 **Dữ liệu mẫu:** các file trong `db/init/` (`01-schema.sql`, `02-data.sql`) được MySQL nạp **tự động ở lần khởi tạo đầu tiên**
-(khi volume `mysql-db` còn trống). Tài khoản `admin`/`lecturer` trong dữ liệu mẫu đã có sẵn nên app không tạo lại;
-hỏi người giữ dữ liệu mẫu để biết mật khẩu. Muốn nạp lại từ đầu: `docker compose down -v` rồi `up` lại.
+(khi volume `mysql-db` còn trống). Tài khoản demo và mật khẩu: xem mục 5.
+Muốn nạp lại từ đầu: `docker compose down -v` (xóa cả dữ liệu đang có) rồi `up` lại.
+
+**Log request:** mỗi request được ghi một dòng `METHOD /đường-dẫn -> mã trạng thái (thời gian ms)` vào log ứng dụng
+(`docker compose logs app`), không ghi query string hay body. File tĩnh và Swagger được bỏ qua.
 
 **macOS:**
 - Cài **Docker Desktop for Mac** đúng chip (Apple Silicon hoặc Intel), mở Docker Desktop trước khi chạy lệnh.
@@ -156,6 +159,22 @@ hỏi người giữ dữ liệu mẫu để biết mật khẩu. Muốn nạp l
 
 ## 5. Tài khoản thử nghiệm
 
+### Khi chạy bằng Docker (dữ liệu demo trong `db/init/`)
+
+Dữ liệu demo **hoàn toàn giả**: 5 khoa, 2 niên khóa, 3 lớp, 18 sinh viên (email `@example.com`), không có tài liệu.
+Ba tài khoản demo có sẵn để giảng viên kiểm thử:
+
+| Vai trò | Tên đăng nhập | Mật khẩu | Ghi chú |
+|---|---|---|---|
+| ADMIN | `admin` | `Admin@Demo2026` | Toàn quyền |
+| LECTURER | `lecturer` | `Lecturer@Demo2026` | Thêm/sửa lớp, sinh viên; tải lên tài liệu |
+| STUDENT | `student01` | `Student@Demo2026` | Email `an.nguyen@example.com`, chỉ xem được hồ sơ của sinh viên Nguyễn Văn An |
+
+Vì `admin`/`lecturer` đã có trong dữ liệu demo, biến `APP_BOOTSTRAP_*` **không** đổi mật khẩu của hai tài khoản này.
+Đây là mật khẩu demo dùng chung; khi triển khai thật nên đổi sau khi đăng nhập hoặc thay dữ liệu demo.
+
+### Khi chạy bằng IntelliJ với MySQL trên máy (database trống)
+
 | Vai trò | Cách có tài khoản |
 |---|---|
 | ADMIN | `admin`, tạo tự động khi `APP_BOOTSTRAP_ENABLED=true` (mật khẩu = `APP_BOOTSTRAP_ADMIN_PASSWORD`) |
@@ -167,9 +186,9 @@ hỏi người giữ dữ liệu mẫu để biết mật khẩu. Muốn nạp l
 POST http://localhost:8082/api/auth/register
 Content-Type: application/json
 
-{ "username": "student01", "email": "student01@example.com", "password": "<mật khẩu tối thiểu 8 ký tự>" }
+{ "username": "student02", "email": "binh.tran@example.com", "password": "<mật khẩu tối thiểu 8 ký tự>" }
 ```
-Tên `admin` và `lecturer` được dành riêng, không đăng ký được.
+Tên `admin` và `lecturer` được dành riêng, không đăng ký được. STUDENT chỉ xem được hồ sơ sinh viên có email trùng email tài khoản.
 
 ---
 
