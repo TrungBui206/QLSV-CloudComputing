@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QLSV trên Kubernetes</title>
+<style>
+  :root { --ink:#14213D; --muted:#5B6678; --line:#DDE2EA; --bg:#F7F8FA; --card:#fff; --v1:#1D4ED8; --v2:#15803D; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:32px 16px 64px; }
+  h1 { font-size:28px; margin:0 0 4px; }
+  p.sub { color:var(--muted); margin:0 0 24px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; border-top:6px solid var(--line); }
+  .card.v1 { border-top-color:var(--v1); } .card.v2 { border-top-color:var(--v2); }
+  .card h2 { font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+  .ver { font-size:40px; font-weight:700; line-height:1.1; }
+  .v1 .ver { color:var(--v1); } .v2 .ver { color:var(--v2); }
+  dl { display:grid; grid-template-columns:auto 1fr; gap:4px 12px; margin:12px 0 0; }
+  dt { color:var(--muted); } dd { margin:0; font-family:ui-monospace,Consolas,monospace; word-break:break-all; }
+  button { font:inherit; font-weight:600; padding:10px 16px; border-radius:8px; border:1px solid var(--ink); background:var(--ink); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-variant-numeric:tabular-nums; }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); }
+  th { font-size:13px; color:var(--muted); font-weight:600; }
+  td.n { text-align:right; } th.n { text-align:right; }
+  .bar { height:8px; border-radius:4px; background:var(--v1); } .bar.v2 { background:var(--v2); }
+  .err { color:#B42318; }
+  a { color:var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>QLSV trên Kubernetes</h1>
+  <p class="sub">Trang này cho biết Pod nào, trên node nào, đang trả lời bạn. <a href="/login.html">Vào ứng dụng</a></p>
+
+  <div class="grid">
+    <section class="card" id="fe"><h2>Frontend (nginx)</h2><div class="ver">…</div>
+      <dl><dt>Pod</dt><dd data-k="pod">…</dd><dt>Node</dt><dd data-k="node">…</dd></dl></section>
+    <section class="card" id="be"><h2>Backend (Spring Boot)</h2><div class="ver">…</div>
+      <dl><dt>Pod</dt><dd data-k="pod">…</dd><dt>Node</dt><dd data-k="node">…</dd></dl></section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Thử cân bằng tải</h2>
+    <p style="margin:0 0 12px;color:var(--muted)">Gọi liên tiếp nhiều request và đếm xem mỗi Pod trả lời bao nhiêu lần.</p>
+    <button id="run">Gọi 40 request</button>
+    <span id="status" style="margin-left:12px;color:var(--muted)"></span>
+    <table>
+      <thead><tr><th>Thành phần</th><th>Pod</th><th>Node</th><th>Phiên bản</th><th class="n">Số lần</th><th style="width:25%"></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="6" style="color:var(--muted)">Chưa chạy.</td></tr></tbody>
+    </table>
+  </section>
+</main>
+<script>
+function getJson(url) {
+  return fetch(url, { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error(url + ' -> ' + r.status);
+    return r.json();
+  });
+}
+function show(id, info) {
+  var el = document.getElementById(id);
+  el.className = 'card ' + (info.version === 'v1' ? 'v1' : 'v2');
+  el.querySelector('.ver').textContent = info.version;
+  el.querySelector('[data-k=pod]').textContent = info.pod;
+  el.querySelector('[data-k=node]').textContent = info.node;
+}
+function fail(id, e) {
+  var el = document.getElementById(id);
+  el.className = 'card';
+  el.querySelector('.ver').innerHTML = '<span class="err" style="font-size:18px">Không gọi được: ' + e.message + '</span>';
+}
+function refresh() {
+  getJson('/frontend-info').then(function (i) { show('fe', i); }).catch(function (e) { fail('fe', e); });
+  getJson('/backend-info').then(function (i) { show('be', i); }).catch(function (e) { fail('be', e); });
+}
+document.getElementById('run').addEventListener('click', function () {
+  var btn = this, total = 40, counts = {}, errors = 0, done = 0;
+  btn.disabled = true;
+  function one(url) {
+    return getJson(url).then(function (i) {
+      var key = i.service + '|' + i.pod;
+      counts[key] = counts[key] || { info: i, n: 0 };
+      counts[key].n += 1;
+    }).catch(function () { errors += 1; }).then(function () {
+      done += 1;
+      document.getElementById('status').textContent = done + '/' + (total * 2) + (errors ? ' · lỗi: ' + errors : '');
+    });
+  }
+  var chain = Promise.resolve();
+  for (var k = 0; k < total; k++) {
+    chain = chain.then(function () { return Promise.all([one('/frontend-info'), one('/backend-info')]); });
+  }
+  chain.then(function () {
+    var rows = Object.keys(counts).sort().map(function (key) {
+      var c = counts[key], i = c.info, pct = Math.round(c.n / total * 100);
+      return '<tr><td>' + i.service + '</td><td>' + i.pod + '</td><td>' + i.node + '</td><td>' + i.version +
+        '</td><td class="n">' + c.n + '</td><td><div class="bar ' + (i.version === 'v1' ? '' : 'v2') +
+        '" style="width:' + pct + '%"></div></td></tr>';
+    });
+    document.getElementById('rows').innerHTML = rows.join('') || '<tr><td colspan="6" class="err">Không có request nào thành công.</td></tr>';
+    btn.disabled = false;
+    refresh();
+  });
+});
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

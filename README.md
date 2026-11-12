@@ -6,6 +6,9 @@ xác thực bằng JWT và phân quyền theo 3 vai trò ADMIN / LECTURER / STUD
 
 ---
 
+
+> **Bài giữa kỳ Kubernetes:** cách triển khai lên cluster kubeadm (1 control plane, 2 worker) ở [k8s/README.md](k8s/README.md).
+
 ## 1. Công nghệ
 
 | Thành phần | Công nghệ |

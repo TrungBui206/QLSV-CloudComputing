@@ -1,0 +1,73 @@
+# MySQL: thành phần CÓ trạng thái, chạy 1 bản.
+# Không nhân bản như frontend/backend vì 2 Pod MySQL độc lập sẽ thành 2 database khác nhau;
+# muốn nhân bản phải cấu hình replication (ngoài phạm vi bài).
+# Dữ liệu nằm trên đĩa của worker1 (hostPath) nên Pod được ghim vào worker1.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: qlsv
+  labels: {app: mysql}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate   # không cho 2 Pod cùng mở một thư mục dữ liệu
+  selector:
+    matchLabels: {app: mysql}
+  template:
+    metadata:
+      labels: {app: mysql}
+    spec:
+      enableServiceLinks: false
+      nodeSelector:
+        kubernetes.io/hostname: worker1
+      containers:
+        - name: mysql
+          image: mysql:8.4
+          args: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_DATABASE
+              valueFrom: {configMapKeyRef: {name: qlsv-config, key: DB_NAME}}
+            - name: MYSQL_USER
+              valueFrom: {secretKeyRef: {name: qlsv-secret, key: DB_USER}}
+            - name: MYSQL_PASSWORD
+              valueFrom: {secretKeyRef: {name: qlsv-secret, key: DB_PASSWORD}}
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: qlsv-secret, key: MYSQL_ROOT_PASSWORD}}
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$MYSQL_ROOT_PASSWORD\""]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests: {cpu: 100m, memory: 512Mi}
+            limits: {memory: 1Gi}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+      volumes:
+        - name: data
+          hostPath:
+            path: /var/lib/qlsv/mysql
+            type: DirectoryOrCreate
+        - name: init
+          configMap:
+            name: mysql-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: qlsv
+spec:
+  type: ClusterIP
+  selector: {app: mysql}
+  ports:
+    - port: 3306
+      targetPort: 3306

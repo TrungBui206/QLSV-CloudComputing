@@ -1,0 +1,16 @@
+# Cấu hình không bí mật của backend. Tên máy "mysql", "minio" là tên Service trong namespace.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qlsv-config
+  namespace: qlsv
+data:
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: educaze_hibernate
+  MINIO_ENDPOINT: http://minio:9000
+  MINIO_BUCKET: student-documents
+  SERVER_PORT: "8082"
+  JPA_SHOW_SQL: "false"
+  # Tài khoản demo đã có sẵn trong dữ liệu db/init nên không cần tạo lúc khởi động
+  APP_BOOTSTRAP_ENABLED: "false"
