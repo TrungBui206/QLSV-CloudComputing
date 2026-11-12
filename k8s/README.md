@@ -3,6 +3,7 @@
 Ứng dụng QLSV (Spring Boot + MySQL + MinIO) đóng gói bằng Docker và chạy trên cluster Kubernetes gồm
 1 control plane (`cp`) và 2 worker (`worker1`, `worker2`), dựng bằng kubeadm trên 3 máy AWS EC2.
 Kết quả thử nghiệm: [docs/kubernetes-test-results.md](../docs/kubernetes-test-results.md).
+Báo cáo tiến độ và hướng dẫn trình bày: [docs/kubernetes-report.md](../docs/kubernetes-report.md).
 
 ## Kiến trúc
 
