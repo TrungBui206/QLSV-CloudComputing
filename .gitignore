@@ -39,3 +39,6 @@ build/
 
 ### Sao luu database (chua du lieu tai khoan, khong commit)
 backups/
+
+# Secret Kubernetes that (tao bang scripts/k8s/gen-secret.sh)
+k8s/01-secret.yaml

@@ -19,5 +19,10 @@ RUN useradd --system --uid 1001 appuser
 COPY --from=build /app/target/*.jar app.jar
 USER appuser
 
+# Phiên bản gắn vào image lúc build: docker build --build-arg APP_VERSION=v1 ...
+# Xem tại GET /info (dùng khi chạy trên Kubernetes)
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 EXPOSE 8082
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]

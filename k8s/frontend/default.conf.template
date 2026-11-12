@@ -1,0 +1,54 @@
+server {
+    listen 8080;
+    server_tokens off;
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size 50m;
+
+    # Thông tin của chính Pod frontend đang trả lời
+    location = /frontend-info {
+        default_type application/json;
+        add_header Cache-Control "no-store";
+        return 200 '{"service":"frontend","version":"${APP_VERSION}","pod":"${POD_NAME}","node":"${NODE_NAME}"}';
+    }
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 'ok';
+    }
+
+    # Thông tin của Pod backend nhận request (Spring Boot Actuator /info)
+    location = /backend-info {
+        proxy_pass http://${API_HOST}:${API_PORT}/info;
+        proxy_connect_timeout 2s;
+        proxy_read_timeout 5s;
+        add_header Cache-Control "no-store";
+    }
+
+    location = /health {
+        proxy_pass http://${API_HOST}:${API_PORT}/health;
+        proxy_connect_timeout 2s;
+        proxy_read_timeout 5s;
+    }
+
+    # API: gọi sang backend qua tên Service (DNS nội bộ của Kubernetes).
+    # Mỗi request mở một kết nối mới nên Service chia đều giữa các Pod backend.
+    location /api/ {
+        proxy_pass http://${API_HOST}:${API_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_connect_timeout 2s;
+        proxy_read_timeout 30s;
+        proxy_next_upstream error timeout;
+    }
+
+    location / {
+        add_header Cache-Control "no-store";
+        # Chèn nhãn phiên bản vào mọi trang HTML mà không sửa mã nguồn giao diện
+        sub_filter '</body>' '<script src="/version-badge.js"></script></body>';
+        sub_filter_once on;
+        try_files $uri $uri/ =404;
+    }
+}
